@@ -59,28 +59,49 @@
 
       <script>
         (() => {
-          const DURACION = 9;
+          const DURACION = 30;
           const tl = gsap.timeline({ paused: true });
+          // Tres ciclos por nube; todas terminan antes de 26 s para que el cierre quede estable (últimos 4 s).
           // [id, inicio, duración, opacidad máxima, deriva x, ascenso y]
-          const vapores = [
+          const base = [
             ["#v1", -1.5, 6.0, 0.16, -60, -70],
             ["#v2", 0.8, 6.2, 0.13, -80, -60],
             ["#v3", -0.8, 5.6, 0.15, 70, -80],
             ["#v4", 3.0, 5.8, 0.12, 60, -60],
             ["#v5", 4.6, 5.0, 0.08, 40, -70],
           ];
-          vapores.forEach(([id, t0, dur, pico, dx, dy]) => {
-            gsap.set(id, { opacity: 0, scale: 0.85, x: 0, y: 0, transformOrigin: "50% 60%" });
-            const vida = gsap.timeline({ paused: true }); // la conduce el tween de abajo
-            vida.to(id, { x: dx, y: dy, scale: 1.3, duration: dur, ease: "sine.inOut" }, 0);
-            vida.to(id, { opacity: pico, duration: dur * 0.4, ease: "sine.out" }, 0);
-            vida.to(id, { opacity: 0, duration: dur * 0.6, ease: "sine.in" }, dur * 0.4);
-            // Las nubes con inicio negativo ya están en curso al empezar la escena.
-            const inicio = Math.max(0, t0);
-            const desde = inicio - t0;
-            const hasta = Math.min(dur, desde + (DURACION - inicio));
-            tl.add(vida.tweenFromTo(desde, hasta), inicio);
+          const ciclos = [0, 9, 17];
+          ciclos.forEach((desfase, c) => {
+            base.forEach(([id, t0, dur, pico, dx, dy]) => {
+              const inicio0 = t0 + desfase;
+              const d = c === 2 ? Math.min(dur, 26 - inicio0) : dur;
+              const vida = gsap.timeline({ paused: true }); // la conduce el tween de abajo
+              vida.fromTo(
+                id,
+                { x: 0, y: 0, scale: 0.85 },
+                {
+                  x: dx,
+                  y: dy,
+                  scale: 1.3,
+                  duration: d,
+                  ease: "sine.inOut",
+                  immediateRender: false,
+                },
+                0,
+              );
+              vida.fromTo(
+                id,
+                { opacity: 0 },
+                { opacity: pico, duration: d * 0.4, ease: "sine.out", immediateRender: false },
+                0,
+              );
+              vida.to(id, { opacity: 0, duration: d * 0.6, ease: "sine.in" }, d * 0.4);
+              // Las nubes con inicio negativo ya están en curso al empezar.
+              const inicio = Math.max(0, inicio0);
+              tl.add(vida.tweenFromTo(inicio - inicio0, d), inicio);
+            });
           });
+          gsap.set(["#v1", "#v2", "#v3", "#v4", "#v5"], { opacity: 0, transformOrigin: "50% 60%" });
           tl.set({}, {}, DURACION);
           window.__timelines["vapor"] = tl;
         })();

@@ -32,66 +32,148 @@
         overflow: hidden;
         background: #000000;
       }
-      .escena {
+      .escena,
+      .video {
         position: absolute;
         inset: 0;
+      }
+      .video {
+        width: 1920px;
+        height: 1080px;
+        object-fit: cover;
       }
     </style>
   </head>
   <body>
     <!--
-      Muestra v03 · solo la escena «Beneficios para tu negocio» (15–24 s del guion de 30 s).
-      En el video completo este archivo será el anfitrión de las cinco escenas.
+      Cirion · Cloud Connect — 36 s: intro (3 s) + guion de 30 s + out (3 s).
+      Escenas del guion (tiempos globales): pregunta 3–7 · dato 7–12 · conexión 12–18 · beneficios 18–27 · cierre 27–33.
     -->
     <div
+      data-hf-id="hf-nk1p"
       id="root"
       data-composition-id="main"
       data-start="0"
-      data-duration="9"
+      data-duration="36"
       data-width="1920"
       data-height="1080"
       data-fps="30"
     >
+      <video
+        data-hf-id="hf-iw7h"
+        id="intro"
+        class="video clip"
+        src="assets/video/intro.mp4"
+        muted
+        playsinline
+        data-start="0"
+        data-duration="3"
+        data-track-index="0"
+      ></video>
+
       <div
+        data-hf-id="hf-53zx"
         id="fondo-vapor"
         class="escena"
         data-composition-id="vapor"
         data-composition-src="compositions/vapor.html"
-        data-start="0"
-        data-duration="9"
-        data-track-index="0"
-        data-width="1920"
-        data-height="1080"
-      ></div>
-
-      <div
-        id="escena-beneficios"
-        class="escena"
-        data-composition-id="beneficios"
-        data-composition-src="compositions/beneficios.html"
-        data-start="0"
-        data-duration="9"
+        data-start="3"
+        data-duration="30"
         data-track-index="1"
         data-width="1920"
         data-height="1080"
       ></div>
 
-      <!-- Pulsos estéreo sintetizados (scripts/generar-sfx-beneficios.py). Música: pendiente. -->
-      <audio
-        id="sfx-beneficios"
-        src="assets/audio/beneficios-sfx.flac"
-        data-start="0"
+      <div
+        data-hf-id="hf-dvfw"
+        id="escena-pregunta"
+        class="escena"
+        data-composition-id="pregunta"
+        data-composition-src="compositions/pregunta.html"
+        data-start="3"
+        data-duration="4"
+        data-track-index="2"
+        data-width="1920"
+        data-height="1080"
+      ></div>
+      <div
+        data-hf-id="hf-futl"
+        id="escena-dato"
+        class="escena"
+        data-composition-id="dato"
+        data-composition-src="compositions/dato.html"
+        data-start="7"
+        data-duration="5"
+        data-track-index="2"
+        data-width="1920"
+        data-height="1080"
+      ></div>
+      <div
+        data-hf-id="hf-j4z9"
+        id="escena-conexion"
+        class="escena"
+        data-composition-id="conexion"
+        data-composition-src="compositions/conexion.html"
+        data-start="12"
+        data-duration="6"
+        data-track-index="2"
+        data-width="1920"
+        data-height="1080"
+      ></div>
+      <div
+        data-hf-id="hf-z18c"
+        id="escena-beneficios"
+        class="escena"
+        data-composition-id="beneficios"
+        data-composition-src="compositions/beneficios.html"
+        data-start="18"
         data-duration="9"
+        data-track-index="2"
+        data-width="1920"
+        data-height="1080"
+      ></div>
+      <div
+        data-hf-id="hf-v12e"
+        id="escena-cierre"
+        class="escena"
+        data-composition-id="cierre"
+        data-composition-src="compositions/cierre.html"
+        data-start="27"
+        data-duration="6"
+        data-track-index="2"
+        data-width="1920"
+        data-height="1080"
+      ></div>
+
+      <video
+        data-hf-id="hf-kpzw"
+        id="out"
+        class="video clip"
+        src="assets/video/out.mp4"
+        muted
+        playsinline
+        data-start="33"
+        data-duration="3"
+        data-track-index="3"
+      ></video>
+
+      <!-- Banda sonora: música synth tech + efectos, mezcla normalizada (scripts/generar-audio.py). -->
+      <audio
+        data-hf-id="hf-rujx"
+        id="banda-sonora"
+        src="assets/audio/banda-sonora.flac"
+        data-start="0"
+        data-duration="36"
         data-track-index="10"
         data-volume="1"
       ></audio>
     </div>
 
     <script>
-      // La animación vive en las sub-composiciones; el anfitrión solo fija la duración.
       const tl = gsap.timeline({ paused: true });
-      tl.set({}, {}, 9);
-
+      // La intro se funde a negro antes de la primera escena.
+      tl.to("#intro", { opacity: 0, duration: 0.4, ease: "sine.in" }, 2.6);
+      tl.set({}, {}, 36);
       window.__timelines["main"] = tl;
       tl.seek(0);
     </script>

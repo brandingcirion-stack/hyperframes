@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <!-- Escena 5 del guion (24–30 s): Cloud Connect la acerca a tu red. El logo oficial llega con out.mp4. -->
+  </head>
+  <body>
+    <template>
+      <style>
+        @font-face {
+          font-family: "Maven Pro";
+          src: url("assets/fonts/MavenPro-latin.woff2") format("woff2");
+          font-weight: 400 700;
+          font-display: block;
+        }
+        /*
+          Proporción áurea (φ): el bloque de texto termina en H/φ³ (255 px); el horizonte de la ciudad
+          cae sobre 0,618·H (668 px). Tamaños en pasos de √φ: 73 (frase) · 45 (bajada).
+        */
+        #root {
+          position: absolute;
+          inset: 0;
+          font-family: "Maven Pro", sans-serif;
+          color: #ffffff;
+        }
+        #k-grupo {
+          position: absolute;
+          inset: 0;
+        }
+        #k-ciudad {
+          position: absolute;
+          left: 0;
+          top: 74px;
+          width: 1920px;
+          transform-origin: 50% 40%;
+          --r: 0%;
+          -webkit-mask-image: radial-gradient(
+            ellipse 70% 60% at 50% 38%,
+            #000 calc(var(--r) - 25%),
+            transparent var(--r)
+          );
+          mask-image: radial-gradient(
+            ellipse 70% 60% at 50% 38%,
+            #000 calc(var(--r) - 25%),
+            transparent var(--r)
+          );
+        }
+        #k-frase {
+          position: absolute;
+          left: 0;
+          right: 0;
+          top: 108px;
+          margin: 0;
+          text-align: center;
+          font-size: 73px;
+          font-weight: 700;
+          line-height: 1;
+          color: #ef2ac1;
+        }
+        #k-bajada {
+          position: absolute;
+          left: 0;
+          right: 0;
+          top: 206px;
+          margin: 0;
+          text-align: center;
+          font-size: 45px;
+          font-weight: 400;
+          line-height: 1;
+          letter-spacing: 0.01em;
+        }
+      </style>
+
+      <div id="root" data-composition-id="cierre" data-width="1920" data-height="1080">
+        <div id="k-grupo">
+          <img
+            id="k-ciudad"
+            src="assets/img/ciudad.webp"
+            alt="Ciudad de noche con arcos de conexión"
+          />
+          <h2 id="k-frase">Cloud Connect la acerca a tu red.</h2>
+          <p id="k-bajada">Conectividad privada para tus aplicaciones.</p>
+        </div>
+      </div>
+
+      <script>
+        (() => {
+          const tl = gsap.timeline({ paused: true });
+          gsap.set("#k-bajada", { opacity: 0, y: 16 });
+
+          // Entrada: continúa el movimiento hacia arriba de la escena anterior (cut-the-curve UP).
+          tl.fromTo(
+            "#k-grupo",
+            { y: 230, opacity: 0.35 },
+            { y: 0, opacity: 1, duration: 0.4, ease: "power4.out" },
+            0,
+          );
+          // La ciudad y sus conexiones se revelan desde el horizonte y se asientan.
+          tl.to("#k-ciudad", { "--r": "150%", duration: 1.6, ease: "power2.out" }, 0.2);
+          tl.fromTo(
+            "#k-ciudad",
+            { scale: 1.06 },
+            { scale: 1, duration: 1.8, ease: "power2.out" },
+            0.2,
+          );
+          tl.to("#k-bajada", { opacity: 1, y: 0, duration: 0.45, ease: "power3.out" }, 0.6);
+          // Cierre completo estable durante los últimos 4 s (2,0–6,0 s).
+          tl.set({}, {}, 6);
+
+          window.__timelines["cierre"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

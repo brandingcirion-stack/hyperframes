@@ -2,24 +2,32 @@
   "fps": 30,
   "seams": [
     {
-      "id": "pregunta→beneficios",
-      "cut": 2.9,
-      "type": "morph",
-      "technique": "cut-the-curve RIGHT del titular + la foto se esfuma y su contorno se transforma en la nube (morph)",
-      "exit": {
-        "selector": "#titular",
-        "axis": "x",
-        "dir": 1
-      },
-      "entry": {
-        "selector": "#nube-b-trazo",
-        "axis": "x",
-        "dir": 1
-      },
-      "carrier": {
-        "out": "#contorno",
-        "in": "#nube-b-trazo"
-      }
+      "id": "pregunta→dato",
+      "cut": 7.0,
+      "technique": "cut-the-curve LEFT",
+      "exit": { "selector": "#p-grupo", "axis": "x", "dir": -1 },
+      "entry": { "selector": "#d-grupo", "axis": "x", "dir": -1 }
+    },
+    {
+      "id": "dato→conexion",
+      "cut": 12.0,
+      "technique": "cut-the-curve LEFT",
+      "exit": { "selector": "#d-grupo", "axis": "x", "dir": -1 },
+      "entry": { "selector": "#c-grupo", "axis": "x", "dir": -1 }
+    },
+    {
+      "id": "conexion→beneficios",
+      "cut": 18.0,
+      "type": "match-cut",
+      "technique": "la nube Cloud Connect permanece en la misma posición y tamaño",
+      "carrier": { "out": "#c-nube", "in": "#b-nube" }
+    },
+    {
+      "id": "beneficios→cierre",
+      "cut": 27.0,
+      "technique": "cut-the-curve UP (la conclusión se eleva)",
+      "exit": { "selector": "#b-grupo", "axis": "y", "dir": -1 },
+      "entry": { "selector": "#k-grupo", "axis": "y", "dir": -1 }
     }
   ]
 }

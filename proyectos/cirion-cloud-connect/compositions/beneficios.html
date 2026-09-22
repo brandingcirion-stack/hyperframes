@@ -24,6 +24,11 @@
           font-family: "Maven Pro", sans-serif;
           color: #ffffff;
         }
+        #b-grupo,
+        #b-portador {
+          position: absolute;
+          inset: 0;
+        }
         #b-titulo {
           position: absolute;
           left: 173px;
@@ -106,330 +111,356 @@
       </style>
 
       <div id="root" data-composition-id="beneficios" data-width="1920" data-height="1080">
-        <h2 id="b-titulo">Beneficios para <span class="acento">tu negocio</span></h2>
-        <div id="b-barra"></div>
+        <div id="b-grupo">
+          <h2 id="b-titulo">Beneficios para <span class="acento">tu negocio</span></h2>
+          <div id="b-barra"></div>
 
-        <svg
-          style="position: absolute; inset: 0"
-          width="1920"
-          height="1080"
-          viewBox="0 0 1920 1080"
-          aria-hidden="true"
-        >
-          <defs>
-            <linearGradient
-              id="b-grad-anillo"
-              x1="660"
-              y1="320"
-              x2="1260"
-              y2="920"
-              gradientUnits="userSpaceOnUse"
+          <svg
+            style="position: absolute; inset: 0"
+            width="1920"
+            height="1080"
+            viewBox="0 0 1920 1080"
+            aria-hidden="true"
+          >
+            <defs>
+              <linearGradient
+                id="b-grad-anillo"
+                x1="660"
+                y1="320"
+                x2="1260"
+                y2="920"
+                gradientUnits="userSpaceOnUse"
+              >
+                <stop offset="0" stop-color="#EF2AC1" />
+                <stop offset="1" stop-color="#00A7E1" />
+              </linearGradient>
+            </defs>
+            <circle
+              id="b-anillo"
+              cx="960"
+              cy="620"
+              r="300"
+              fill="none"
+              stroke="url(#b-grad-anillo)"
+              stroke-width="2"
+              opacity="0.45"
+            />
+            <!-- seguridad -->
+            <line class="radio-base" x1="960" y1="482" x2="960" y2="378" />
+            <line
+              id="b-r-seguridad"
+              x1="960"
+              y1="482"
+              x2="960"
+              y2="378"
+              stroke="#EF2AC1"
+              stroke-width="2"
+              pathLength="1"
+              stroke-dasharray="1"
+              stroke-dashoffset="1"
+            />
+            <circle
+              id="b-p-seguridad"
+              class="pulso"
+              cx="960"
+              cy="482"
+              r="8"
+              fill="#EF2AC1"
+              data-hasta-x="960"
+              data-hasta-y="378"
+            />
+            <circle
+              id="b-ping-seguridad"
+              cx="960"
+              cy="320"
+              r="58"
+              fill="none"
+              stroke="#EF2AC1"
+              stroke-width="2"
+              opacity="0"
+            />
+            <g
+              class="nodo-base"
+              fill="none"
+              stroke-width="3"
+              stroke-linecap="round"
+              stroke-linejoin="round"
             >
-              <stop offset="0" stop-color="#EF2AC1" />
-              <stop offset="1" stop-color="#00A7E1" />
-            </linearGradient>
-            <linearGradient id="b-grad-nube" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0" stop-color="#EF2AC1" />
-              <stop offset="1" stop-color="#00A7E1" />
-            </linearGradient>
-          </defs>
-          <circle
-            id="b-anillo"
-            cx="960"
-            cy="620"
-            r="300"
-            fill="none"
-            stroke="url(#b-grad-anillo)"
-            stroke-width="2"
-            opacity="0.45"
-          />
-          <!-- seguridad -->
-          <line class="radio-base" x1="960" y1="482" x2="960" y2="378" />
-          <line
-            id="b-r-seguridad"
-            x1="960"
-            y1="482"
-            x2="960"
-            y2="378"
-            stroke="#EF2AC1"
-            stroke-width="2"
-            pathLength="1"
-            stroke-dasharray="1"
-            stroke-dashoffset="1"
-          />
-          <circle
-            id="b-p-seguridad"
-            class="pulso"
-            cx="960"
-            cy="482"
-            r="8"
-            fill="#EF2AC1"
-            data-hasta-x="960"
-            data-hasta-y="378"
-          />
-          <circle
-            id="b-ping-seguridad"
-            cx="960"
-            cy="320"
-            r="58"
-            fill="none"
-            stroke="#EF2AC1"
-            stroke-width="2"
-            opacity="0"
-          />
-          <g
-            class="nodo-base"
-            fill="none"
-            stroke-width="3"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <circle cx="960" cy="320" r="58" fill="#000" />
-            <g transform="translate(928 288)">
-              <path d="M32 9 L50 16 V30 C50 43 42 51 32 55 C22 51 14 43 14 30 V16 Z" />
-              <rect x="25" y="30" width="14" height="11" rx="2" />
-              <path d="M28 30 V26 A4 4 0 0 1 36 26 V30" />
+              <circle cx="960" cy="320" r="58" fill="#000" />
+              <g transform="translate(928 288)">
+                <path d="M32 9 L50 16 V30 C50 43 42 51 32 55 C22 51 14 43 14 30 V16 Z" />
+                <rect x="25" y="30" width="14" height="11" rx="2" />
+                <path d="M28 30 V26 A4 4 0 0 1 36 26 V30" />
+              </g>
             </g>
-          </g>
-          <g
-            id="b-n-seguridad"
-            class="nodo-luz"
-            stroke="#EF2AC1"
-            fill="none"
-            stroke-width="3"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            opacity="0"
-            style="filter: drop-shadow(0 0 12px #ef2ac188)"
-          >
-            <circle cx="960" cy="320" r="58" fill="#000" />
-            <g transform="translate(928 288)">
-              <path d="M32 9 L50 16 V30 C50 43 42 51 32 55 C22 51 14 43 14 30 V16 Z" />
-              <rect x="25" y="30" width="14" height="11" rx="2" />
-              <path d="M28 30 V26 A4 4 0 0 1 36 26 V30" />
+            <g
+              id="b-n-seguridad"
+              class="nodo-luz"
+              stroke="#EF2AC1"
+              fill="none"
+              stroke-width="3"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              opacity="0"
+              style="filter: drop-shadow(0 0 12px #ef2ac188)"
+            >
+              <circle cx="960" cy="320" r="58" fill="#000" />
+              <g transform="translate(928 288)">
+                <path d="M32 9 L50 16 V30 C50 43 42 51 32 55 C22 51 14 43 14 30 V16 Z" />
+                <rect x="25" y="30" width="14" height="11" rx="2" />
+                <path d="M28 30 V26 A4 4 0 0 1 36 26 V30" />
+              </g>
             </g>
-          </g>
-          <!-- flexibilidad -->
-          <line class="radio-base" x1="1146" y1="620" x2="1202" y2="620" />
-          <line
-            id="b-r-flexibilidad"
-            x1="1146"
-            y1="620"
-            x2="1202"
-            y2="620"
-            stroke="#00A7E1"
-            stroke-width="2"
-            pathLength="1"
-            stroke-dasharray="1"
-            stroke-dashoffset="1"
-          />
-          <circle
-            id="b-p-flexibilidad"
-            class="pulso"
-            cx="1146"
-            cy="620"
-            r="8"
-            fill="#00A7E1"
-            data-hasta-x="1202"
-            data-hasta-y="620"
-          />
-          <circle
-            id="b-ping-flexibilidad"
-            cx="1260"
-            cy="620"
-            r="58"
-            fill="none"
-            stroke="#00A7E1"
-            stroke-width="2"
-            opacity="0"
-          />
-          <g
-            class="nodo-base"
-            fill="none"
-            stroke-width="3"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <circle cx="1260" cy="620" r="58" fill="#000" />
-            <g transform="translate(1228 588)">
-              <path d="M20 44 H45 A9 9 0 0 0 46 26 A13 13 0 0 0 21 23 A10.5 10.5 0 0 0 20 44 Z" />
+            <!-- flexibilidad -->
+            <line class="radio-base" x1="1146" y1="620" x2="1202" y2="620" />
+            <line
+              id="b-r-flexibilidad"
+              x1="1146"
+              y1="620"
+              x2="1202"
+              y2="620"
+              stroke="#00A7E1"
+              stroke-width="2"
+              pathLength="1"
+              stroke-dasharray="1"
+              stroke-dashoffset="1"
+            />
+            <circle
+              id="b-p-flexibilidad"
+              class="pulso"
+              cx="1146"
+              cy="620"
+              r="8"
+              fill="#00A7E1"
+              data-hasta-x="1202"
+              data-hasta-y="620"
+            />
+            <circle
+              id="b-ping-flexibilidad"
+              cx="1260"
+              cy="620"
+              r="58"
+              fill="none"
+              stroke="#00A7E1"
+              stroke-width="2"
+              opacity="0"
+            />
+            <g
+              class="nodo-base"
+              fill="none"
+              stroke-width="3"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <circle cx="1260" cy="620" r="58" fill="#000" />
+              <g transform="translate(1228 588)">
+                <path d="M20 44 H45 A9 9 0 0 0 46 26 A13 13 0 0 0 21 23 A10.5 10.5 0 0 0 20 44 Z" />
+              </g>
             </g>
-          </g>
-          <g
-            id="b-n-flexibilidad"
-            class="nodo-luz"
-            stroke="#00A7E1"
-            fill="none"
-            stroke-width="3"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            opacity="0"
-            style="filter: drop-shadow(0 0 12px #00a7e188)"
-          >
-            <circle cx="1260" cy="620" r="58" fill="#000" />
-            <g transform="translate(1228 588)">
-              <path d="M20 44 H45 A9 9 0 0 0 46 26 A13 13 0 0 0 21 23 A10.5 10.5 0 0 0 20 44 Z" />
+            <g
+              id="b-n-flexibilidad"
+              class="nodo-luz"
+              stroke="#00A7E1"
+              fill="none"
+              stroke-width="3"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              opacity="0"
+              style="filter: drop-shadow(0 0 12px #00a7e188)"
+            >
+              <circle cx="1260" cy="620" r="58" fill="#000" />
+              <g transform="translate(1228 588)">
+                <path d="M20 44 H45 A9 9 0 0 0 46 26 A13 13 0 0 0 21 23 A10.5 10.5 0 0 0 20 44 Z" />
+              </g>
             </g>
-          </g>
-          <!-- disponibilidad -->
-          <line class="radio-base" x1="960" y1="670" x2="960" y2="862" />
-          <line
-            id="b-r-disponibilidad"
-            x1="960"
-            y1="670"
-            x2="960"
-            y2="862"
-            stroke="#00A7E1"
-            stroke-width="2"
-            pathLength="1"
-            stroke-dasharray="1"
-            stroke-dashoffset="1"
-          />
-          <circle
-            id="b-p-disponibilidad"
-            class="pulso"
-            cx="960"
-            cy="670"
-            r="8"
-            fill="#00A7E1"
-            data-hasta-x="960"
-            data-hasta-y="862"
-          />
-          <circle
-            id="b-ping-disponibilidad"
-            cx="960"
-            cy="920"
-            r="58"
-            fill="none"
-            stroke="#00A7E1"
-            stroke-width="2"
-            opacity="0"
-          />
-          <g
-            class="nodo-base"
-            fill="none"
-            stroke-width="3"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <circle cx="960" cy="920" r="58" fill="#000" />
-            <g transform="translate(928 888)"><path d="M18 33 L28 43 L47 22" /></g>
-          </g>
-          <g
-            id="b-n-disponibilidad"
-            class="nodo-luz"
-            stroke="#00A7E1"
-            fill="none"
-            stroke-width="3"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            opacity="0"
-            style="filter: drop-shadow(0 0 12px #00a7e188)"
-          >
-            <circle cx="960" cy="920" r="58" fill="#000" />
-            <g transform="translate(928 888)"><path d="M18 33 L28 43 L47 22" /></g>
-          </g>
-          <!-- performance -->
-          <line class="radio-base" x1="789" y1="620" x2="718" y2="620" />
-          <line
-            id="b-r-performance"
-            x1="789"
-            y1="620"
-            x2="718"
-            y2="620"
-            stroke="#EF2AC1"
-            stroke-width="2"
-            pathLength="1"
-            stroke-dasharray="1"
-            stroke-dashoffset="1"
-          />
-          <circle
-            id="b-p-performance"
-            class="pulso"
-            cx="789"
-            cy="620"
-            r="8"
-            fill="#EF2AC1"
-            data-hasta-x="718"
-            data-hasta-y="620"
-          />
-          <circle
-            id="b-ping-performance"
-            cx="660"
-            cy="620"
-            r="58"
-            fill="none"
-            stroke="#EF2AC1"
-            stroke-width="2"
-            opacity="0"
-          />
-          <g
-            class="nodo-base"
-            fill="none"
-            stroke-width="3"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <circle cx="660" cy="620" r="58" fill="#000" />
-            <g transform="translate(628 588)"><path d="M36 8 L20 35 H31 L28 56 L44 27 H33 Z" /></g>
-          </g>
-          <g
-            id="b-n-performance"
-            class="nodo-luz"
-            stroke="#EF2AC1"
-            fill="none"
-            stroke-width="3"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            opacity="0"
-            style="filter: drop-shadow(0 0 12px #ef2ac188)"
-          >
-            <circle cx="660" cy="620" r="58" fill="#000" />
-            <g transform="translate(628 588)"><path d="M36 8 L20 35 H31 L28 56 L44 27 H33 Z" /></g>
-          </g>
-          <path
-            id="b-nube"
-            d="M828.2 669.4 C778.7 669.4 762.2 620.0 787.0 591.2 C796.8 555.7 836.4 542.5 865.2 554.1 C877.6 496.4 935.3 467.6 984.7 484.0 C1025.9 492.3 1054.8 525.2 1058.9 562.3 C1100.1 550.0 1145.4 578.8 1145.4 620.0 C1145.4 653.0 1120.7 669.4 1091.8 669.4 Z"
-            fill="none"
-            stroke="url(#b-grad-nube)"
-            stroke-width="4"
-            stroke-linejoin="round"
-            style="filter: drop-shadow(0 0 10px rgba(239, 42, 193, 0.45))"
-          />
-        </svg>
+            <!-- disponibilidad -->
+            <line class="radio-base" x1="960" y1="670" x2="960" y2="862" />
+            <line
+              id="b-r-disponibilidad"
+              x1="960"
+              y1="670"
+              x2="960"
+              y2="862"
+              stroke="#00A7E1"
+              stroke-width="2"
+              pathLength="1"
+              stroke-dasharray="1"
+              stroke-dashoffset="1"
+            />
+            <circle
+              id="b-p-disponibilidad"
+              class="pulso"
+              cx="960"
+              cy="670"
+              r="8"
+              fill="#00A7E1"
+              data-hasta-x="960"
+              data-hasta-y="862"
+            />
+            <circle
+              id="b-ping-disponibilidad"
+              cx="960"
+              cy="920"
+              r="58"
+              fill="none"
+              stroke="#00A7E1"
+              stroke-width="2"
+              opacity="0"
+            />
+            <g
+              class="nodo-base"
+              fill="none"
+              stroke-width="3"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <circle cx="960" cy="920" r="58" fill="#000" />
+              <g transform="translate(928 888)"><path d="M18 33 L28 43 L47 22" /></g>
+            </g>
+            <g
+              id="b-n-disponibilidad"
+              class="nodo-luz"
+              stroke="#00A7E1"
+              fill="none"
+              stroke-width="3"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              opacity="0"
+              style="filter: drop-shadow(0 0 12px #00a7e188)"
+            >
+              <circle cx="960" cy="920" r="58" fill="#000" />
+              <g transform="translate(928 888)"><path d="M18 33 L28 43 L47 22" /></g>
+            </g>
+            <!-- performance -->
+            <line class="radio-base" x1="789" y1="620" x2="718" y2="620" />
+            <line
+              id="b-r-performance"
+              x1="789"
+              y1="620"
+              x2="718"
+              y2="620"
+              stroke="#EF2AC1"
+              stroke-width="2"
+              pathLength="1"
+              stroke-dasharray="1"
+              stroke-dashoffset="1"
+            />
+            <circle
+              id="b-p-performance"
+              class="pulso"
+              cx="789"
+              cy="620"
+              r="8"
+              fill="#EF2AC1"
+              data-hasta-x="718"
+              data-hasta-y="620"
+            />
+            <circle
+              id="b-ping-performance"
+              cx="660"
+              cy="620"
+              r="58"
+              fill="none"
+              stroke="#EF2AC1"
+              stroke-width="2"
+              opacity="0"
+            />
+            <g
+              class="nodo-base"
+              fill="none"
+              stroke-width="3"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <circle cx="660" cy="620" r="58" fill="#000" />
+              <g transform="translate(628 588)">
+                <path d="M36 8 L20 35 H31 L28 56 L44 27 H33 Z" />
+              </g>
+            </g>
+            <g
+              id="b-n-performance"
+              class="nodo-luz"
+              stroke="#EF2AC1"
+              fill="none"
+              stroke-width="3"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              opacity="0"
+              style="filter: drop-shadow(0 0 12px #ef2ac188)"
+            >
+              <circle cx="660" cy="620" r="58" fill="#000" />
+              <g transform="translate(628 588)">
+                <path d="M36 8 L20 35 H31 L28 56 L44 27 H33 Z" />
+              </g>
+            </g>
+          </svg>
 
-        <div id="b-nube-texto">CLOUD<br />CONNECT</div>
+          <div id="b-et-seguridad" class="b-etiqueta" data-color="#EF2AC1">
+            <h3>Seguridad:</h3>
+            <p>tráfico privado.</p>
+          </div>
+          <div id="b-et-flexibilidad" class="b-etiqueta" data-color="#00A7E1">
+            <h3>Flexibilidad:</h3>
+            <p>múltiples proveedores cloud.</p>
+          </div>
+          <div id="b-et-disponibilidad" class="b-etiqueta" data-color="#00A7E1">
+            <h3>Disponibilidad:</h3>
+            <p>redundancia y SLA empresariales.</p>
+          </div>
+          <div id="b-et-performance" class="b-etiqueta derecha" data-color="#EF2AC1">
+            <h3>Performance:</h3>
+            <p>menor variabilidad.</p>
+          </div>
+        </div>
 
-        <div id="b-et-seguridad" class="b-etiqueta" data-color="#EF2AC1">
-          <h3>Seguridad:</h3>
-          <p>tráfico privado.</p>
-        </div>
-        <div id="b-et-flexibilidad" class="b-etiqueta" data-color="#00A7E1">
-          <h3>Flexibilidad:</h3>
-          <p>múltiples proveedores cloud.</p>
-        </div>
-        <div id="b-et-disponibilidad" class="b-etiqueta" data-color="#00A7E1">
-          <h3>Disponibilidad:</h3>
-          <p>redundancia y SLA empresariales.</p>
-        </div>
-        <div id="b-et-performance" class="b-etiqueta derecha" data-color="#EF2AC1">
-          <h3>Performance:</h3>
-          <p>menor variabilidad.</p>
+        <!-- Portador: la misma nube (posición y tamaño) que en la escena «Cloud Connect» -->
+        <div id="b-portador">
+          <svg
+            style="position: absolute; inset: 0"
+            width="1920"
+            height="1080"
+            viewBox="0 0 1920 1080"
+            aria-hidden="true"
+          >
+            <defs>
+              <linearGradient id="b-grad-nube" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0" stop-color="#EF2AC1" />
+                <stop offset="1" stop-color="#00A7E1" />
+              </linearGradient>
+            </defs>
+            <path
+              id="b-nube"
+              d="M828.2 669.4 C778.7 669.4 762.2 620.0 787.0 591.2 C796.8 555.7 836.4 542.5 865.2 554.1 C877.6 496.4 935.3 467.6 984.7 484.0 C1025.9 492.3 1054.8 525.2 1058.9 562.3 C1100.1 550.0 1145.4 578.8 1145.4 620.0 C1145.4 653.0 1120.7 669.4 1091.8 669.4 Z"
+              fill="none"
+              stroke="url(#b-grad-nube)"
+              stroke-width="4"
+              stroke-linejoin="round"
+              style="filter: drop-shadow(0 0 10px rgba(239, 42, 193, 0.45))"
+            />
+          </svg>
+          <div id="b-nube-texto">CLOUD<br />CONNECT</div>
         </div>
       </div>
 
       <script>
         (() => {
           const tl = gsap.timeline({ paused: true });
-          // Mismos tiempos que scripts/generar-sfx-beneficios.py (ENCENDIDOS, VIAJE y CIERRE).
+          // Entrada: la nube llega desde la escena anterior; el resto aparece en 0,35 s (todo visible desde el inicio).
+          tl.fromTo(
+            "#b-grupo",
+            { opacity: 0 },
+            { opacity: 1, duration: 0.35, ease: "sine.out" },
+            0,
+          );
+          // Tiempos en la grilla de 120 BPM de la banda sonora (scripts/generar-audio.py): llegadas en 1,5 / 3,0 / 4,5 / 6,0 s.
           const VIAJE = 0.45;
           const encendidos = [
-            ["seguridad", 1.0],
-            ["flexibilidad", 2.6],
-            ["disponibilidad", 4.2],
-            ["performance", 5.8],
+            ["seguridad", 1.05],
+            ["flexibilidad", 2.55],
+            ["disponibilidad", 4.05],
+            ["performance", 5.55],
           ];
-          const CIERRE = 7.3;
+          const CIERRE = 7.5;
 
           // Todo el contenido está visible desde el inicio: solo se iluminan los iconos.
           encendidos.forEach(([id, t]) => {
@@ -466,6 +497,13 @@
 
           // Cierre: con los cuatro beneficios activos, el anillo se completa en intensidad.
           tl.to("#b-anillo", { opacity: 0.85, duration: 0.6, ease: "sine.inOut" }, CIERRE);
+          // Salida hacia arriba (vector reservado: la conclusión se eleva) — cut-the-curve UP.
+          tl.to(["#b-grupo", "#b-portador"], { y: -230, duration: 0.34, ease: "power4.in" }, 8.66);
+          tl.to(
+            ["#b-grupo", "#b-portador"],
+            { opacity: 0, duration: 0.22, ease: "power1.in" },
+            8.76,
+          );
           tl.set({}, {}, 9);
 
           window.__timelines["beneficios"] = tl;

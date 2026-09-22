@@ -1,0 +1,493 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <!-- Escena 3 del guion (09–15 s): Cloud Connect · conexión privada desde «Tu red» hacia los proveedores. -->
+  </head>
+  <body>
+    <template>
+      <style>
+        @font-face {
+          font-family: "Maven Pro";
+          src: url("assets/fonts/MavenPro-latin.woff2") format("woff2");
+          font-weight: 400 700;
+          font-display: block;
+        }
+        /*
+          Proporción áurea (φ): título en x = W/φ⁵ (173 px), línea base en H/φ⁴ (158 px), como en «Beneficios».
+          La nube ocupa exactamente la misma posición y tamaño que en la escena siguiente (elemento compartido).
+          Tamaños en pasos de √φ: 57 · 36 · 28.
+        */
+        #root {
+          position: absolute;
+          inset: 0;
+          font-family: "Maven Pro", sans-serif;
+          color: #ffffff;
+        }
+        #c-grupo,
+        #c-portador {
+          position: absolute;
+          inset: 0;
+        }
+        #c-titulo {
+          position: absolute;
+          left: 173px;
+          top: 96px;
+          margin: 0;
+          font-size: 57px;
+          font-weight: 700;
+          line-height: 1;
+        }
+        #c-barra {
+          position: absolute;
+          left: 176px;
+          top: 190px;
+          width: 92px;
+          height: 5px;
+          border-radius: 3px;
+          background: #ef2ac1;
+        }
+        #c-sub {
+          position: absolute;
+          left: 173px;
+          top: 222px;
+          margin: 0;
+          font-size: 36px;
+          font-weight: 400;
+          letter-spacing: 0.01em;
+        }
+        #c-red-texto {
+          position: absolute;
+          left: 330px;
+          top: 700px;
+          width: 200px;
+          text-align: center;
+          font-size: 28px;
+          font-weight: 600;
+          letter-spacing: 0.02em;
+        }
+        .c-prov {
+          position: absolute;
+          left: 1508px;
+          font-size: 28px;
+          font-weight: 500;
+          letter-spacing: 0.02em;
+          color: #8e9096;
+          white-space: nowrap;
+        }
+        #c-nube-texto {
+          position: absolute;
+          left: 760px;
+          top: 552px;
+          width: 400px;
+          text-align: center;
+          font-size: 45px;
+          font-weight: 500;
+          line-height: 1.12;
+          letter-spacing: 0.08em;
+        }
+        .c-ruta-base {
+          fill: none;
+          stroke: #54565a;
+          stroke-width: 2;
+          opacity: 0.6;
+        }
+        .c-destino-base {
+          fill: #000000;
+          stroke: #54565a;
+          stroke-width: 2;
+        }
+      </style>
+
+      <div id="root" data-composition-id="conexion" data-width="1920" data-height="1080">
+        <div id="c-grupo">
+          <h2 id="c-titulo">Cloud Connect</h2>
+          <div id="c-barra"></div>
+          <p id="c-sub">Conexión privada entre tu red y los principales proveedores cloud.</p>
+
+          <svg
+            style="position: absolute; inset: 0"
+            width="1920"
+            height="1080"
+            viewBox="0 0 1920 1080"
+            aria-hidden="true"
+          >
+            <!-- Tu red → Cloud Connect -->
+            <line class="c-ruta-base" x1="488" y1="620" x2="777" y2="620" />
+            <line
+              id="c-enlace"
+              x1="488"
+              y1="620"
+              x2="777"
+              y2="620"
+              stroke="#EF2AC1"
+              stroke-width="3"
+              pathLength="1"
+              stroke-dasharray="1"
+              stroke-dashoffset="1"
+              style="filter: drop-shadow(0 0 6px rgba(239, 42, 193, 0.6))"
+            />
+            <line
+              id="c-enlace-chispa"
+              x1="488"
+              y1="620"
+              x2="777"
+              y2="620"
+              stroke="#ffffff"
+              stroke-width="5"
+              stroke-linecap="round"
+              pathLength="1"
+              stroke-dasharray="0.08 1"
+              stroke-dashoffset="0.08"
+              opacity="0"
+            />
+            <g
+              stroke="#EF2AC1"
+              fill="none"
+              stroke-width="3"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              style="filter: drop-shadow(0 0 10px rgba(239, 42, 193, 0.45))"
+            >
+              <circle cx="430" cy="620" r="58" fill="#000" />
+              <g transform="translate(398 588)">
+                <circle cx="32" cy="15" r="6" />
+                <circle cx="15" cy="47" r="6" />
+                <circle cx="49" cy="47" r="6" />
+                <path d="M29 20 L18 41 M35 20 L46 41 M21 47 H43" />
+              </g>
+            </g>
+            <!-- Cloud Connect → proveedores -->
+            <path class="c-ruta-base" d="M1146 620 C1300 620 1330 440 1468 440" />
+            <path
+              id="c-ruta-0"
+              d="M1146 620 C1300 620 1330 440 1468 440"
+              fill="none"
+              stroke="#00A7E1"
+              stroke-width="2"
+              pathLength="1"
+              stroke-dasharray="1"
+              stroke-dashoffset="1"
+            />
+            <path
+              id="c-chispa-0"
+              d="M1146 620 C1300 620 1330 440 1468 440"
+              fill="none"
+              stroke="#ffffff"
+              stroke-width="4"
+              stroke-linecap="round"
+              pathLength="1"
+              stroke-dasharray="0.08 1"
+              stroke-dashoffset="0.08"
+              opacity="0"
+            />
+            <path class="c-ruta-base" d="M1146 620 C1300 620 1330 530 1468 530" />
+            <path
+              id="c-ruta-1"
+              d="M1146 620 C1300 620 1330 530 1468 530"
+              fill="none"
+              stroke="#00A7E1"
+              stroke-width="2"
+              pathLength="1"
+              stroke-dasharray="1"
+              stroke-dashoffset="1"
+            />
+            <path
+              id="c-chispa-1"
+              d="M1146 620 C1300 620 1330 530 1468 530"
+              fill="none"
+              stroke="#ffffff"
+              stroke-width="4"
+              stroke-linecap="round"
+              pathLength="1"
+              stroke-dasharray="0.08 1"
+              stroke-dashoffset="0.08"
+              opacity="0"
+            />
+            <path class="c-ruta-base" d="M1146 620 C1300 620 1330 620 1468 620" />
+            <path
+              id="c-ruta-2"
+              d="M1146 620 C1300 620 1330 620 1468 620"
+              fill="none"
+              stroke="#00A7E1"
+              stroke-width="2"
+              pathLength="1"
+              stroke-dasharray="1"
+              stroke-dashoffset="1"
+            />
+            <path
+              id="c-chispa-2"
+              d="M1146 620 C1300 620 1330 620 1468 620"
+              fill="none"
+              stroke="#ffffff"
+              stroke-width="4"
+              stroke-linecap="round"
+              pathLength="1"
+              stroke-dasharray="0.08 1"
+              stroke-dashoffset="0.08"
+              opacity="0"
+            />
+            <path class="c-ruta-base" d="M1146 620 C1300 620 1330 710 1468 710" />
+            <path
+              id="c-ruta-3"
+              d="M1146 620 C1300 620 1330 710 1468 710"
+              fill="none"
+              stroke="#00A7E1"
+              stroke-width="2"
+              pathLength="1"
+              stroke-dasharray="1"
+              stroke-dashoffset="1"
+            />
+            <path
+              id="c-chispa-3"
+              d="M1146 620 C1300 620 1330 710 1468 710"
+              fill="none"
+              stroke="#ffffff"
+              stroke-width="4"
+              stroke-linecap="round"
+              pathLength="1"
+              stroke-dasharray="0.08 1"
+              stroke-dashoffset="0.08"
+              opacity="0"
+            />
+            <path class="c-ruta-base" d="M1146 620 C1300 620 1330 800 1468 800" />
+            <path
+              id="c-ruta-4"
+              d="M1146 620 C1300 620 1330 800 1468 800"
+              fill="none"
+              stroke="#00A7E1"
+              stroke-width="2"
+              pathLength="1"
+              stroke-dasharray="1"
+              stroke-dashoffset="1"
+            />
+            <path
+              id="c-chispa-4"
+              d="M1146 620 C1300 620 1330 800 1468 800"
+              fill="none"
+              stroke="#ffffff"
+              stroke-width="4"
+              stroke-linecap="round"
+              pathLength="1"
+              stroke-dasharray="0.08 1"
+              stroke-dashoffset="0.08"
+              opacity="0"
+            />
+            <circle class="c-destino-base" cx="1480" cy="440" r="10" />
+            <circle
+              id="c-destino-0"
+              cx="1480"
+              cy="440"
+              r="10"
+              fill="#00A7E1"
+              opacity="0"
+              style="filter: drop-shadow(0 0 8px #00a7e1)"
+            />
+            <circle
+              id="c-ping-0"
+              cx="1480"
+              cy="440"
+              r="10"
+              fill="none"
+              stroke="#00A7E1"
+              stroke-width="2"
+              opacity="0"
+            />
+            <circle class="c-destino-base" cx="1480" cy="530" r="10" />
+            <circle
+              id="c-destino-1"
+              cx="1480"
+              cy="530"
+              r="10"
+              fill="#00A7E1"
+              opacity="0"
+              style="filter: drop-shadow(0 0 8px #00a7e1)"
+            />
+            <circle
+              id="c-ping-1"
+              cx="1480"
+              cy="530"
+              r="10"
+              fill="none"
+              stroke="#00A7E1"
+              stroke-width="2"
+              opacity="0"
+            />
+            <circle class="c-destino-base" cx="1480" cy="620" r="10" />
+            <circle
+              id="c-destino-2"
+              cx="1480"
+              cy="620"
+              r="10"
+              fill="#00A7E1"
+              opacity="0"
+              style="filter: drop-shadow(0 0 8px #00a7e1)"
+            />
+            <circle
+              id="c-ping-2"
+              cx="1480"
+              cy="620"
+              r="10"
+              fill="none"
+              stroke="#00A7E1"
+              stroke-width="2"
+              opacity="0"
+            />
+            <circle class="c-destino-base" cx="1480" cy="710" r="10" />
+            <circle
+              id="c-destino-3"
+              cx="1480"
+              cy="710"
+              r="10"
+              fill="#00A7E1"
+              opacity="0"
+              style="filter: drop-shadow(0 0 8px #00a7e1)"
+            />
+            <circle
+              id="c-ping-3"
+              cx="1480"
+              cy="710"
+              r="10"
+              fill="none"
+              stroke="#00A7E1"
+              stroke-width="2"
+              opacity="0"
+            />
+            <circle class="c-destino-base" cx="1480" cy="800" r="10" />
+            <circle
+              id="c-destino-4"
+              cx="1480"
+              cy="800"
+              r="10"
+              fill="#00A7E1"
+              opacity="0"
+              style="filter: drop-shadow(0 0 8px #00a7e1)"
+            />
+            <circle
+              id="c-ping-4"
+              cx="1480"
+              cy="800"
+              r="10"
+              fill="none"
+              stroke="#00A7E1"
+              stroke-width="2"
+              opacity="0"
+            />
+          </svg>
+          <div id="c-red-texto">Tu red</div>
+          <div id="c-prov-0" class="c-prov" style="top: 423px">AWS</div>
+          <div id="c-prov-1" class="c-prov" style="top: 513px">Azure</div>
+          <div id="c-prov-2" class="c-prov" style="top: 603px">Google Cloud</div>
+          <div id="c-prov-3" class="c-prov" style="top: 693px">IBM Cloud</div>
+          <div id="c-prov-4" class="c-prov" style="top: 783px">Oracle Cloud</div>
+        </div>
+
+        <!-- Portador: la misma nube que en «Beneficios para tu negocio» -->
+        <div id="c-portador">
+          <svg
+            style="position: absolute; inset: 0"
+            width="1920"
+            height="1080"
+            viewBox="0 0 1920 1080"
+            aria-hidden="true"
+          >
+            <defs>
+              <linearGradient id="c-grad-nube" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0" stop-color="#EF2AC1" />
+                <stop offset="1" stop-color="#00A7E1" />
+              </linearGradient>
+            </defs>
+            <path
+              id="c-nube"
+              d="M828.2 669.4 C778.7 669.4 762.2 620.0 787.0 591.2 C796.8 555.7 836.4 542.5 865.2 554.1 C877.6 496.4 935.3 467.6 984.7 484.0 C1025.9 492.3 1054.8 525.2 1058.9 562.3 C1100.1 550.0 1145.4 578.8 1145.4 620.0 C1145.4 653.0 1120.7 669.4 1091.8 669.4 Z"
+              fill="none"
+              stroke="url(#c-grad-nube)"
+              stroke-width="4"
+              stroke-linejoin="round"
+              style="filter: drop-shadow(0 0 10px rgba(239, 42, 193, 0.45))"
+            />
+            <path
+              id="c-nube-luz"
+              d="M828.2 669.4 C778.7 669.4 762.2 620.0 787.0 591.2 C796.8 555.7 836.4 542.5 865.2 554.1 C877.6 496.4 935.3 467.6 984.7 484.0 C1025.9 492.3 1054.8 525.2 1058.9 562.3 C1100.1 550.0 1145.4 578.8 1145.4 620.0 C1145.4 653.0 1120.7 669.4 1091.8 669.4 Z"
+              fill="none"
+              stroke="#ffffff"
+              stroke-width="4"
+              stroke-linejoin="round"
+              opacity="0"
+              style="filter: drop-shadow(0 0 14px #ef2ac1)"
+            />
+          </svg>
+          <div id="c-nube-texto">CLOUD<br />CONNECT</div>
+        </div>
+      </div>
+
+      <script>
+        (() => {
+          const tl = gsap.timeline({ paused: true });
+          // Tiempos en la grilla de 120 BPM (scripts/generar-audio.py):
+          // enlace Tu red → nube 0,9–1,5 s; destinos en 2,0 / 2,25 / 2,5 / 2,75 / 3,0 s.
+
+          // Entrada: continúa el movimiento hacia la izquierda (cut-the-curve LEFT).
+          tl.fromTo(
+            ["#c-grupo", "#c-portador"],
+            { x: 230, opacity: 0.35 },
+            { x: 0, opacity: 1, duration: 0.4, ease: "power4.out" },
+            0,
+          );
+
+          // Tu red → Cloud Connect: la conexión privada se dibuja y enciende la nube al llegar.
+          tl.to(
+            "#c-enlace",
+            { attr: { "stroke-dashoffset": 0 }, duration: 0.6, ease: "power2.in" },
+            0.9,
+          );
+          tl.set("#c-enlace-chispa", { opacity: 1 }, 0.9);
+          tl.to(
+            "#c-enlace-chispa",
+            { attr: { "stroke-dashoffset": -0.92 }, duration: 0.6, ease: "power2.in" },
+            0.9,
+          );
+          tl.set("#c-enlace-chispa", { opacity: 0 }, 1.5);
+          tl.fromTo(
+            "#c-nube-luz",
+            { opacity: 0.9 },
+            { opacity: 0, duration: 0.8, ease: "power2.out" },
+            1.5,
+          );
+
+          // Cloud Connect → proveedores: cada ruta lleva un pulso que activa su destino.
+          [0, 1, 2, 3, 4].forEach((i) => {
+            const t = 1.5 + i * 0.25;
+            tl.to(
+              "#c-ruta-" + i,
+              { attr: { "stroke-dashoffset": 0 }, duration: 0.5, ease: "power2.in" },
+              t,
+            );
+            tl.set("#c-chispa-" + i, { opacity: 1 }, t);
+            tl.to(
+              "#c-chispa-" + i,
+              { attr: { "stroke-dashoffset": -0.92 }, duration: 0.5, ease: "power2.in" },
+              t,
+            );
+            tl.set("#c-chispa-" + i, { opacity: 0 }, t + 0.5);
+            tl.to("#c-destino-" + i, { opacity: 1, duration: 0.2, ease: "power2.out" }, t + 0.5);
+            tl.fromTo(
+              "#c-ping-" + i,
+              { attr: { r: 10 }, opacity: 0.7 },
+              { attr: { r: 30 }, opacity: 0, duration: 0.6, ease: "power2.out" },
+              t + 0.5,
+            );
+            tl.to("#c-prov-" + i, { color: "#ffffff", duration: 0.3, ease: "power2.out" }, t + 0.5);
+          });
+          // Todo queda estable para leer (3,2–5,5 s).
+
+          // Salida: el esquema se retira y la nube permanece (pasa a «Beneficios» en la misma posición).
+          tl.to("#c-grupo", { opacity: 0, duration: 0.45, ease: "sine.in" }, 5.55);
+          tl.set({}, {}, 6);
+
+          window.__timelines["conexion"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

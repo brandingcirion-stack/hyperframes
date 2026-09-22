@@ -1,2 +1,5 @@
 renders/
 snapshots/
+# Activos pesados fuera de Git (ver GUION.md > Activos): videos del cliente y banda sonora regenerable
+assets/video/
+assets/audio/banda-sonora.flac

@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <!-- Escena 2 del guion (04–09 s): 90 % · Gartner. Referencia completa pendiente antes de publicar. -->
+  </head>
+  <body>
+    <template>
+      <style>
+        @font-face {
+          font-family: "Maven Pro";
+          src: url("assets/fonts/MavenPro-latin.woff2") format("woff2");
+          font-weight: 400 700;
+          font-display: block;
+        }
+        /*
+          Proporción áurea (φ): texto en la columna 0,618·W (1187 px); explicación desde 0,382·H (412 px)
+          y fuente sobre 0,618·H (668 px). Cifra: 393 px = 93·√φ⁶; «%» = 393/φ.
+        */
+        #root {
+          position: absolute;
+          inset: 0;
+          font-family: "Maven Pro", sans-serif;
+          color: #ffffff;
+        }
+        #d-grupo {
+          position: absolute;
+          inset: 0;
+        }
+        #d-globo {
+          position: absolute;
+          left: 255px;
+          top: 206px;
+          width: 690px;
+          transform-origin: 50% 50%;
+        }
+        #d-cifra {
+          position: absolute;
+          left: 250px;
+          top: 344px;
+          margin: 0;
+          font-size: 393px;
+          font-weight: 700;
+          line-height: 1;
+          letter-spacing: -0.02em;
+          white-space: nowrap;
+          background: linear-gradient(135deg, #ef2ac1 0%, #c24bf0 45%, #6a5cff 100%);
+          -webkit-background-clip: text;
+          background-clip: text;
+          color: transparent;
+        }
+        #d-cifra .pc {
+          font-size: 243px;
+          background: linear-gradient(135deg, #c24bf0 0%, #6a5cff 100%);
+          -webkit-background-clip: text;
+          background-clip: text;
+          color: transparent;
+        }
+        #d-texto {
+          position: absolute;
+          left: 1187px;
+          top: 412px;
+          width: 560px;
+          margin: 0;
+          font-size: 45px;
+          font-weight: 400;
+          line-height: 1.25;
+          letter-spacing: 0.01em;
+        }
+        #d-fuente {
+          position: absolute;
+          left: 1187px;
+          top: 668px;
+          margin: 0;
+          font-size: 28px;
+          letter-spacing: 0.02em;
+          color: #b9bbc0;
+        }
+      </style>
+
+      <div id="root" data-composition-id="dato" data-width="1920" data-height="1080">
+        <div id="d-grupo">
+          <img
+            id="d-globo"
+            src="assets/img/globo.webp"
+            alt="Globo terráqueo con conexiones de red"
+          />
+          <p id="d-cifra">90<span class="pc">%</span></p>
+          <p id="d-texto">
+            de las organizaciones adoptará estrategias de nube híbrida hasta 2027.*
+          </p>
+          <p id="d-fuente">*Fuente: Gartner.</p>
+        </div>
+      </div>
+
+      <script>
+        (() => {
+          const tl = gsap.timeline({ paused: true });
+          gsap.set("#d-cifra", { clipPath: "inset(100% 0% 0% 0%)" });
+          gsap.set(["#d-texto", "#d-fuente"], { opacity: 0, y: 16 });
+
+          // Entrada: continúa el movimiento hacia la izquierda de la escena anterior (cut-the-curve LEFT).
+          tl.fromTo(
+            "#d-grupo",
+            { x: 230, opacity: 0.35 },
+            { x: 0, opacity: 1, duration: 0.4, ease: "power4.out" },
+            0,
+          );
+          tl.fromTo(
+            "#d-globo",
+            { scale: 0.96 },
+            { scale: 1, duration: 1.2, ease: "power2.out" },
+            0,
+          );
+          // La cifra sube dentro de su máscara y queda fija en 0,5 s (golpe de la banda sonora en 7,5 s globales).
+          tl.to(
+            "#d-cifra",
+            { clipPath: "inset(0% 0% 0% 0%)", duration: 0.4, ease: "power3.out" },
+            0.1,
+          );
+          tl.to("#d-texto", { opacity: 1, y: 0, duration: 0.45, ease: "power3.out" }, 0.7);
+          tl.to("#d-fuente", { opacity: 1, y: 0, duration: 0.4, ease: "power3.out" }, 1.0);
+          // Cifra, explicación y fuente quedan estables para leer (1,4–4,66 s).
+
+          // Salida hacia la izquierda.
+          tl.to("#d-grupo", { x: -230, duration: 0.34, ease: "power4.in" }, 4.66);
+          tl.to("#d-grupo", { opacity: 0, duration: 0.22, ease: "power1.in" }, 4.76);
+          tl.set({}, {}, 5);
+
+          window.__timelines["dato"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>
