@@ -5,29 +5,13 @@
     <meta name="viewport" content="width=1920, height=1080" />
     <!-- GSAP local (3.15): el CDN público está bloqueado en este entorno y así el render no depende de la red. -->
     <script src="assets/vendor/gsap.min.js"></script>
-    <script src="assets/vendor/MorphSVGPlugin.min.js"></script>
     <style>
-      /*
-        Diagramación áurea (φ ≈ 1,618), lienzo 1920×1080:
-        - Columnas: foto en 0–0,382·W (733 px); texto desde 733 + H/φ⁵ (97 px) = 830 px.
-        - Horizontales: 0,382·H = 412 px (línea de los ojos y tope del titular) y 0,618·H = 668 px (base del titular).
-        - Esquema: diámetro del anillo / ancho de la nube = φ (660 / 408).
-        - Escala tipográfica en pasos de √φ: 93 · 73 · 57 · 45 · 36 · 28 · 22 px.
-      */
-      :root {
-        --negro: #000000;
-        --blanco: #ffffff;
-        --magenta: #ef2ac1;
-        --azul: #00a7e1;
-        --azul-profundo: #001f60;
-        --gris: #54565a;
-        --gris-texto: #8e9096;
-        --fuente: "Maven Pro", sans-serif;
-        --t-93: 93px;
-        --t-45: 45px;
-        --t-36: 36px;
-        --t-28: 28px;
-        --t-22: 22px;
+      /* Maven Pro servida localmente (Google Fonts, licencia OFL): subconjunto latino, pesos 400–700. */
+      @font-face {
+        font-family: "Maven Pro";
+        src: url("assets/fonts/MavenPro-latin.woff2") format("woff2");
+        font-weight: 400 700;
+        font-display: block;
       }
       * {
         margin: 0;
@@ -39,730 +23,74 @@
         width: 1920px;
         height: 1080px;
         overflow: hidden;
-        background: var(--negro);
+        background: #000000;
       }
       #root {
         position: relative;
         width: 1920px;
         height: 1080px;
         overflow: hidden;
-        background: var(--negro);
-        font-family: var(--fuente);
-        color: var(--blanco);
+        background: #000000;
       }
-      .escena,
-      .capa {
+      .escena {
         position: absolute;
         inset: 0;
-      }
-
-      /* Vapor: nubes muy difuminadas */
-      .vapor {
-        position: absolute;
-        width: 1100px;
-        height: 700px;
-        opacity: 0;
-        will-change: transform, opacity;
-      }
-
-      /* Escena 1 */
-      #foto {
-        position: absolute;
-        left: 30px;
-        top: 216px;
-        width: 744px;
-        transform-origin: 40% 30%;
-      }
-      #foto img {
-        display: block;
-        width: 744px;
-        height: auto;
-      }
-      #titular {
-        position: absolute;
-        left: 830px;
-        top: 390px;
-        font-size: var(--t-93);
-        font-weight: 700;
-        line-height: 1.08;
-        letter-spacing: -0.01em;
-      }
-      #titular .linea {
-        display: block;
-      }
-
-      /* Escena 2 */
-      #nube-texto {
-        position: absolute;
-        left: 760px;
-        top: 438px;
-        width: 400px;
-        text-align: center;
-        font-size: var(--t-45);
-        font-weight: 500;
-        line-height: 1.12;
-        letter-spacing: 0.08em;
-      }
-      .etiqueta {
-        position: absolute;
-        width: 400px;
-      }
-      .etiqueta h3 {
-        font-size: var(--t-36);
-        font-weight: 600;
-        letter-spacing: 0.03em;
-        margin-bottom: 6px;
-      }
-      .etiqueta p {
-        font-size: var(--t-28);
-        font-weight: 400;
-        line-height: 1.3;
-        letter-spacing: 0.02em;
-      }
-      .etiqueta.magenta h3 {
-        color: var(--magenta);
-      }
-      .etiqueta.azul h3 {
-        color: var(--azul);
-      }
-      .etiqueta.derecha {
-        text-align: right;
-      }
-      #et-seguridad {
-        left: 1124px;
-        top: 104px;
-      }
-      #et-flexibilidad {
-        left: 1380px;
-        top: 452px;
-        width: 380px;
-      }
-      #et-disponibilidad {
-        left: 1110px;
-        top: 818px;
-      }
-      #et-performance {
-        left: 140px;
-        top: 468px;
-      }
-      .proveedor {
-        position: absolute;
-        font-size: var(--t-22);
-        font-weight: 500;
-        letter-spacing: 0.04em;
-        color: var(--gris-texto);
-        white-space: nowrap;
-      }
-      #pie {
-        position: absolute;
-        left: 0;
-        right: 0;
-        top: 1004px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 28px;
-        font-size: var(--t-22);
-        letter-spacing: 0.03em;
-        color: var(--gris-texto);
-      }
-      #pie .raya {
-        width: 360px;
-        height: 1px;
-        transform-origin: center;
-      }
-      #pie .raya.izq {
-        background: linear-gradient(90deg, transparent, var(--magenta));
-      }
-      #pie .raya.der {
-        background: linear-gradient(90deg, var(--azul), transparent);
-      }
-      .glow-m {
-        filter: drop-shadow(0 0 10px rgba(239, 42, 193, 0.45));
-      }
-      .glow-a {
-        filter: drop-shadow(0 0 10px rgba(0, 167, 225, 0.45));
       }
     </style>
   </head>
   <body>
+    <!--
+      Muestra v03 · solo la escena «Beneficios para tu negocio» (15–24 s del guion de 30 s).
+      En el video completo este archivo será el anfitrión de las cinco escenas.
+    -->
     <div
-      data-hf-id="hf-s1pe"
       id="root"
       data-composition-id="main"
       data-start="0"
-      data-duration="8"
+      data-duration="9"
       data-width="1920"
       data-height="1080"
       data-fps="30"
     >
-      <!-- VAPOR · 0–8 s · capa de fondo (texturas generadas con scripts/generar-vapor.py) -->
       <div
-        data-hf-id="hf-xhql"
-        id="vapor"
-        class="escena clip"
+        id="fondo-vapor"
+        class="escena"
+        data-composition-id="vapor"
+        data-composition-src="compositions/vapor.html"
         data-start="0"
-        data-duration="8"
+        data-duration="9"
         data-track-index="0"
-      >
-        <img
-          data-hf-id="hf-pscv"
-          id="v1"
-          class="vapor"
-          src="assets/img/vapor-1.webp"
-          alt=""
-          style="left: 1020px; top: -60px"
-        />
-        <img
-          data-hf-id="hf-3szv"
-          id="v2"
-          class="vapor"
-          src="assets/img/vapor-2.webp"
-          alt=""
-          style="left: 1080px; top: 520px"
-        />
-        <img
-          data-hf-id="hf-jbqi"
-          id="v3"
-          class="vapor"
-          src="assets/img/vapor-3.webp"
-          alt=""
-          style="left: -380px; top: 560px"
-        />
-        <img
-          data-hf-id="hf-v7e8"
-          id="v4"
-          class="vapor"
-          src="assets/img/vapor-1.webp"
-          alt=""
-          style="left: -150px; top: 120px"
-        />
-        <img
-          data-hf-id="hf-mjvj"
-          id="v5"
-          class="vapor"
-          src="assets/img/vapor-2.webp"
-          alt=""
-          style="left: 410px; top: 190px"
-        />
-        <img
-          data-hf-id="hf-b7md"
-          id="v6"
-          class="vapor"
-          src="assets/img/vapor-3.webp"
-          alt=""
-          style="left: 700px; top: 260px"
-        />
-      </div>
+        data-width="1920"
+        data-height="1080"
+      ></div>
 
-      <!-- ESCENA 1 · 0,0–2,9 s · Foto + pregunta de apertura (texto literal de la lámina) -->
       <div
-        data-hf-id="hf-q0w5"
-        id="s1"
-        class="escena clip"
+        id="escena-beneficios"
+        class="escena"
+        data-composition-id="beneficios"
+        data-composition-src="compositions/beneficios.html"
         data-start="0"
-        data-duration="2.9"
+        data-duration="9"
         data-track-index="1"
-      >
-        <div data-hf-id="hf-tbun" id="foto">
-          <img
-            data-hf-id="hf-8tbk"
-            id="foto-img"
-            src="assets/img/ejecutivo.webp"
-            alt="Ejecutivo pensativo mirando hacia la derecha"
-          />
-        </div>
-        <!-- Contorno de la foto como vector: se transforma en la nube de Cloud Connect -->
-        <svg
-          data-hf-id="hf-p153"
-          class="capa"
-          width="1920"
-          height="1080"
-          viewBox="0 0 1920 1080"
-          aria-hidden="true"
-        >
-          <defs data-hf-id="hf-mh0t">
-            <linearGradient data-hf-id="hf-9t0j" id="grad-contorno" x1="0" y1="0" x2="1" y2="0">
-              <stop data-hf-id="hf-8w7a" offset="0" stop-color="#EF2AC1" />
-              <stop data-hf-id="hf-n6po" id="grad-contorno-fin" offset="1" stop-color="#EF2AC1" />
-            </linearGradient>
-          </defs>
-          <path
-            data-hf-id="hf-tewo"
-            id="contorno"
-            class="glow-m"
-            d="M408.1 972.6 L387.4 972.6 L374.1 971.2 L340.8 962.3 L314.9 950.5 L284.6 931.2 L248.3 913.5 L171.3 889.0 L155.1 882.4 L136.6 872.0 L108.4 852.0 L80.7 822.8 L67.4 804.3 L60.7 792.5 L54.8 780.6 L46.6 758.4 L40.7 733.3 L37.8 702.2 L39.2 678.5 L44.4 655.6 L50.4 640.0 L62.9 618.6 L71.1 608.2 L97.0 584.5 L97.7 581.6 L74.8 549.0 L61.5 523.1 L52.6 500.9 L43.7 471.3 L38.5 440.2 L37.8 409.9 L39.2 392.1 L44.4 366.2 L51.8 344.8 L62.9 322.6 L76.2 303.3 L95.1 283.0 L109.2 271.1 L132.1 256.3 L155.8 244.5 L178.0 236.3 L212.0 228.2 L243.9 224.5 L280.9 224.5 L311.9 228.2 L338.6 234.1 L371.1 246.0 L403.7 263.0 L427.4 280.0 L445.5 296.7 L464.8 319.6 L474.4 333.7 L486.2 355.9 L495.1 378.8 L501.0 401.7 L504.0 421.0 L506.2 450.6 L510.3 453.2 L545.0 465.0 L569.5 477.6 L599.8 499.1 L620.9 519.4 L637.9 540.9 L648.3 557.9 L657.9 578.6 L664.5 603.0 L667.1 605.6 L690.1 618.2 L703.4 627.8 L727.5 650.4 L738.5 664.4 L749.6 682.2 L760.0 708.8 L763.0 720.7 L765.2 739.2 L764.5 760.6 L760.0 782.8 L753.4 801.3 L740.0 823.5 L731.9 833.9 L713.8 851.3 L694.5 865.4 L670.8 877.9 L656.8 883.9 L632.4 891.2 L614.6 895.0 L584.3 897.9 L556.1 896.4 L537.6 893.5 L531.3 899.0 L527.6 907.2 L515.8 922.7 L502.9 935.6 L488.1 946.8 L469.6 957.1 L445.9 966.0 L426.6 970.4 Z"
-            fill="none"
-            stroke="url(#grad-contorno)"
-            stroke-width="6"
-            stroke-linejoin="round"
-            opacity="0"
-          />
-          <path
-            data-hf-id="hf-bj3q"
-            id="nube-destino"
-            d="M815.0 594.4 C760.6 594.4 742.5 540.0 769.6 508.3 C780.5 469.3 824.0 454.8 855.8 467.5 C869.4 404.0 932.8 372.3 987.2 390.4 C1032.5 399.5 1064.2 435.8 1068.8 476.5 C1114.1 463.0 1164.0 494.7 1164.0 540.0 C1164.0 576.3 1136.8 594.4 1105.0 594.4 Z"
-            fill="none"
-            stroke="none"
-          />
-        </svg>
-        <h1 data-hf-id="hf-g88k" id="titular">
-          <span data-hf-id="hf-292z" class="linea" id="l1">¿Qué ocurre entre</span>
-          <span data-hf-id="hf-fwx3" class="linea" id="l2"
-            >tus <span data-hf-id="hf-x6ho" id="w-usuarios">usuarios</span> y</span
-          >
-          <span data-hf-id="hf-ht0n" class="linea" id="l3"
-            >la <span data-hf-id="hf-rb4q" id="w-nube">nube</span>?</span
-          >
-        </h1>
-      </div>
+        data-width="1920"
+        data-height="1080"
+      ></div>
 
-      <!-- ESCENA 2 · 2,9–8,0 s · Beneficios de Cloud Connect (esquema de la lámina) -->
-      <div
-        data-hf-id="hf-0kb9"
-        id="s2"
-        class="escena clip"
-        data-start="2.9"
-        data-duration="5.1"
-        data-track-index="2"
-      >
-        <svg
-          data-hf-id="hf-stnr"
-          class="capa"
-          width="1920"
-          height="1080"
-          viewBox="0 0 1920 1080"
-          aria-hidden="true"
-        >
-          <defs data-hf-id="hf-vl9d">
-            <linearGradient
-              data-hf-id="hf-mo2d"
-              id="grad-anillo"
-              x1="630"
-              y1="210"
-              x2="1290"
-              y2="870"
-              gradientUnits="userSpaceOnUse"
-            >
-              <stop data-hf-id="hf-bk0a" offset="0" stop-color="#EF2AC1" />
-              <stop data-hf-id="hf-d4a9" offset="1" stop-color="#00A7E1" />
-            </linearGradient>
-            <linearGradient data-hf-id="hf-bd7o" id="grad-nube-b" x1="0" y1="0" x2="1" y2="0">
-              <stop data-hf-id="hf-bybb" offset="0" stop-color="#EF2AC1" />
-              <stop data-hf-id="hf-ef39" offset="1" stop-color="#00A7E1" />
-            </linearGradient>
-          </defs>
-          <circle
-            data-hf-id="hf-zj9r"
-            id="anillo"
-            cx="960"
-            cy="540"
-            r="330"
-            fill="none"
-            stroke="url(#grad-anillo)"
-            stroke-width="2"
-            opacity="0.55"
-            pathLength="1"
-            stroke-dasharray="1"
-            stroke-dashoffset="1"
-            transform="rotate(-90 960 540)"
-          />
-
-          <!-- Radios: nube → nodo -->
-          <line
-            data-hf-id="hf-mozw"
-            id="r-seguridad"
-            class="radio"
-            x1="960"
-            y1="383"
-            x2="960"
-            y2="268"
-            stroke="#EF2AC1"
-            stroke-width="2"
-            pathLength="1"
-            stroke-dasharray="1"
-            stroke-dashoffset="1"
-          />
-          <line
-            data-hf-id="hf-1ywb"
-            id="r-flexibilidad"
-            class="radio"
-            x1="1164"
-            y1="540"
-            x2="1232"
-            y2="540"
-            stroke="#00A7E1"
-            stroke-width="2"
-            pathLength="1"
-            stroke-dasharray="1"
-            stroke-dashoffset="1"
-          />
-          <line
-            data-hf-id="hf-mmea"
-            id="r-disponibilidad"
-            class="radio"
-            x1="960"
-            y1="594"
-            x2="960"
-            y2="812"
-            stroke="#00A7E1"
-            stroke-width="2"
-            pathLength="1"
-            stroke-dasharray="1"
-            stroke-dashoffset="1"
-          />
-          <line
-            data-hf-id="hf-3uos"
-            id="r-performance"
-            class="radio"
-            x1="752"
-            y1="540"
-            x2="688"
-            y2="540"
-            stroke="#EF2AC1"
-            stroke-width="2"
-            pathLength="1"
-            stroke-dasharray="1"
-            stroke-dashoffset="1"
-          />
-
-          <!-- Pulsos en los radios -->
-          <circle
-            data-hf-id="hf-nn5m"
-            id="p-seguridad"
-            class="glow-m"
-            cx="960"
-            cy="325"
-            r="9"
-            fill="#EF2AC1"
-          />
-          <circle
-            data-hf-id="hf-o32i"
-            id="p-flexibilidad"
-            class="glow-a"
-            cx="1198"
-            cy="540"
-            r="9"
-            fill="#00A7E1"
-          />
-          <circle
-            data-hf-id="hf-ibyh"
-            id="p-disponibilidad"
-            class="glow-a"
-            cx="960"
-            cy="703"
-            r="9"
-            fill="#00A7E1"
-          />
-          <circle
-            data-hf-id="hf-3021"
-            id="p-performance"
-            class="glow-m"
-            cx="720"
-            cy="540"
-            r="9"
-            fill="#EF2AC1"
-          />
-
-          <!-- Nodos con iconos outline -->
-          <g
-            data-hf-id="hf-gcbj"
-            id="n-seguridad"
-            class="nodo glow-m"
-            stroke="#EF2AC1"
-            fill="none"
-            stroke-width="3"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <circle
-              data-hf-id="hf-qsil"
-              cx="960"
-              cy="210"
-              r="58"
-              fill="#000"
-              class="aro"
-              pathLength="1"
-              stroke-dasharray="1"
-              stroke-dashoffset="1"
-              transform="rotate(-90 960 210)"
-            />
-            <g data-hf-id="hf-3syb" class="icono" transform="translate(928 178)">
-              <path
-                data-hf-id="hf-e8ps"
-                d="M32 9 L50 16 V30 C50 43 42 51 32 55 C22 51 14 43 14 30 V16 Z"
-              />
-              <rect data-hf-id="hf-l18w" x="25" y="30" width="14" height="11" rx="2" />
-              <path data-hf-id="hf-5l4k" d="M28 30 V26 A4 4 0 0 1 36 26 V30" />
-            </g>
-          </g>
-          <g
-            data-hf-id="hf-j9z4"
-            id="n-flexibilidad"
-            class="nodo glow-a"
-            stroke="#00A7E1"
-            fill="none"
-            stroke-width="3"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <circle
-              data-hf-id="hf-dtuj"
-              cx="1290"
-              cy="540"
-              r="58"
-              fill="#000"
-              class="aro"
-              pathLength="1"
-              stroke-dasharray="1"
-              stroke-dashoffset="1"
-              transform="rotate(-90 1290 540)"
-            />
-            <g data-hf-id="hf-crp9" class="icono" transform="translate(1258 508)">
-              <path
-                data-hf-id="hf-q9kd"
-                d="M20 44 H45 A9 9 0 0 0 46 26 A13 13 0 0 0 21 23 A10.5 10.5 0 0 0 20 44 Z"
-              />
-            </g>
-          </g>
-          <g
-            data-hf-id="hf-8rnm"
-            id="n-disponibilidad"
-            class="nodo glow-a"
-            stroke="#00A7E1"
-            fill="none"
-            stroke-width="3"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <circle
-              data-hf-id="hf-f065"
-              cx="960"
-              cy="870"
-              r="58"
-              fill="#000"
-              class="aro"
-              pathLength="1"
-              stroke-dasharray="1"
-              stroke-dashoffset="1"
-              transform="rotate(-90 960 870)"
-            />
-            <g data-hf-id="hf-zlxs" class="icono" transform="translate(928 838)">
-              <path data-hf-id="hf-hdpo" d="M18 33 L28 43 L47 22" />
-            </g>
-          </g>
-          <g
-            data-hf-id="hf-f0a3"
-            id="n-performance"
-            class="nodo glow-m"
-            stroke="#EF2AC1"
-            fill="none"
-            stroke-width="3"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <circle
-              data-hf-id="hf-kxjt"
-              cx="630"
-              cy="540"
-              r="58"
-              fill="#000"
-              class="aro"
-              pathLength="1"
-              stroke-dasharray="1"
-              stroke-dashoffset="1"
-              transform="rotate(-90 630 540)"
-            />
-            <g data-hf-id="hf-jqlr" class="icono" transform="translate(598 508)">
-              <path data-hf-id="hf-4zam" d="M36 8 L20 35 H31 L28 56 L44 27 H33 Z" />
-            </g>
-          </g>
-
-          <!-- Nube B: continúa exactamente donde terminó el contorno de la foto -->
-          <path
-            data-hf-id="hf-5qts"
-            id="nube-b-trazo"
-            class="glow-m"
-            d="M815.0 594.4 C760.6 594.4 742.5 540.0 769.6 508.3 C780.5 469.3 824.0 454.8 855.8 467.5 C869.4 404.0 932.8 372.3 987.2 390.4 C1032.5 399.5 1064.2 435.8 1068.8 476.5 C1114.1 463.0 1164.0 494.7 1164.0 540.0 C1164.0 576.3 1136.8 594.4 1105.0 594.4 Z"
-            fill="none"
-            stroke="url(#grad-nube-b)"
-            stroke-width="4"
-            stroke-linejoin="round"
-          />
-        </svg>
-
-        <!-- Proveedores (nombres, no logotipos) -->
-        <div data-hf-id="hf-litn" class="proveedor" style="left: 790px; top: 384px">AWS</div>
-        <div data-hf-id="hf-ikqu" class="proveedor" style="left: 1076px; top: 394px">Azure</div>
-        <div data-hf-id="hf-o80g" class="proveedor" style="left: 716px; top: 676px">
-          Google Cloud
-        </div>
-        <div data-hf-id="hf-we90" class="proveedor" style="left: 806px; top: 752px">IBM Cloud</div>
-        <div data-hf-id="hf-bkn8" class="proveedor" style="left: 1058px; top: 686px">
-          Oracle Cloud
-        </div>
-
-        <div data-hf-id="hf-5kwz" id="nube-texto">CLOUD<br data-hf-id="hf-x5px" />CONNECT</div>
-
-        <div data-hf-id="hf-ldcz" id="et-seguridad" class="etiqueta magenta">
-          <h3 data-hf-id="hf-85ri">SEGURIDAD</h3>
-          <p data-hf-id="hf-tnpy">
-            Tráfico privado<br data-hf-id="hf-rsrt" />y aislado de Internet.
-          </p>
-        </div>
-        <div data-hf-id="hf-clt9" id="et-flexibilidad" class="etiqueta azul">
-          <h3 data-hf-id="hf-dywp">FLEXIBILIDAD</h3>
-          <p data-hf-id="hf-o2u3">
-            Acceso a múltiples<br data-hf-id="hf-szow" />proveedores cloud<br
-              data-hf-id="hf-sldv"
-            />desde una sola<br data-hf-id="hf-qluq" />arquitectura.
-          </p>
-        </div>
-        <div data-hf-id="hf-a6ab" id="et-disponibilidad" class="etiqueta azul">
-          <h3 data-hf-id="hf-p5b7">DISPONIBILIDAD</h3>
-          <p data-hf-id="hf-e324">
-            Diseño redundante<br data-hf-id="hf-q7jp" />y SLA empresariales.
-          </p>
-        </div>
-        <div data-hf-id="hf-elpj" id="et-performance" class="etiqueta magenta derecha">
-          <h3 data-hf-id="hf-pgpe">PERFORMANCE</h3>
-          <p data-hf-id="hf-3s3j">
-            Menor variabilidad<br data-hf-id="hf-regs" />para aplicaciones<br
-              data-hf-id="hf-r05r"
-            />críticas.
-          </p>
-        </div>
-
-        <div data-hf-id="hf-3sk9" id="pie">
-          <span data-hf-id="hf-zzei" class="raya izq"></span>
-          <span data-hf-id="hf-7rcm" id="pie-texto"
-            >Conexiones privadas diseñadas para entornos empresariales.</span
-          >
-          <span data-hf-id="hf-e6n5" class="raya der"></span>
-        </div>
-      </div>
+      <!-- Pulsos estéreo sintetizados (scripts/generar-sfx-beneficios.py). Música: pendiente. -->
+      <audio
+        id="sfx-beneficios"
+        src="assets/audio/beneficios-sfx.flac"
+        data-start="0"
+        data-duration="9"
+        data-track-index="10"
+        data-volume="1"
+      ></audio>
     </div>
 
     <script>
-      gsap.registerPlugin(MorphSVGPlugin);
+      // La animación vive en las sub-composiciones; el anfitrión solo fija la duración.
       const tl = gsap.timeline({ paused: true });
-      const T = { corte: 2.9 };
-
-      // ---- Vapor: cada nube aparece, asciende, se expande y se esfuma ----
-      // [id, inicio, duración, opacidad máxima, deriva x, ascenso y]
-      const vapores = [
-        ["#v1", -1.2, 5.2, 0.26, -60, -70],
-        ["#v2", 0.4, 5.6, 0.2, -80, -60],
-        ["#v3", -0.6, 5.0, 0.24, 70, -80],
-        ["#v4", 1.0, 4.6, 0.18, 60, -60],
-        ["#v5", 2.05, 2.6, 0.34, 40, -90],
-        ["#v6", 3.3, 4.7, 0.13, -50, -50],
-      ];
-      vapores.forEach(([id, t0, dur, pico, dx, dy]) => {
-        gsap.set(id, { opacity: 0, scale: 0.85, x: 0, y: 0, transformOrigin: "50% 60%" });
-        const inicio = Math.max(0, t0);
-        const avance = (inicio - t0) / dur; // las que ya estaban en curso al empezar
-        const vida = gsap.timeline({ paused: true }); // la conduce el tween de abajo
-        vida.to(id, { x: dx, y: dy, scale: 1.3, duration: dur, ease: "sine.inOut" }, 0);
-        vida.to(id, { opacity: pico, duration: dur * 0.4, ease: "sine.out" }, 0);
-        vida.to(id, { opacity: 0, duration: dur * 0.6, ease: "sine.in" }, dur * 0.4);
-        tl.add(vida.tweenFromTo(dur * avance, dur), inicio);
-      });
-
-      // ---- Estados iniciales ----
-      gsap.set(["#l1", "#l2", "#l3"], { y: 50, opacity: 0 });
-      gsap.set("#foto-img", { opacity: 0 });
-      gsap.set("#foto", { scale: 1.04, filter: "blur(0px)" });
-      gsap.set("#nube-texto", { opacity: 0, y: 14 });
-      gsap.set(".icono", { opacity: 0 });
-      gsap.set(".nodo", { opacity: 0 });
-      gsap.set(["#p-seguridad", "#p-flexibilidad", "#p-disponibilidad", "#p-performance"], {
-        opacity: 0,
-        scale: 0,
-        transformOrigin: "50% 50%",
-      });
-      gsap.set(".etiqueta", { opacity: 0, y: 16 });
-      gsap.set(".proveedor", { opacity: 0 });
-      gsap.set("#pie-texto", { opacity: 0 });
-      gsap.set("#pie .raya", { scaleX: 0 });
-
-      // ---- Escena 1: foto y pregunta ----
-      tl.to("#foto-img", { opacity: 1, duration: 0.8, ease: "sine.out" }, 0);
-      tl.to("#foto", { scale: 1, duration: 2.2, ease: "power2.out" }, 0);
-      tl.to(
-        ["#l1", "#l2", "#l3"],
-        { y: 0, opacity: 1, duration: 0.5, ease: "power3.out", stagger: 0.12 },
-        0.25,
-      );
-      tl.fromTo(
-        "#w-usuarios",
-        { color: "#ffffff" },
-        { color: "#EF2AC1", duration: 0.4, ease: "power2.out" },
-        1.0,
-      );
-      tl.fromTo(
-        "#w-nube",
-        { color: "#ffffff" },
-        { color: "#EF2AC1", duration: 0.4, ease: "power2.out" },
-        1.3,
-      );
-
-      // ---- Transición: la foto se esfuma como vapor y su contorno se vuelve la nube ----
-      tl.to("#titular", { x: 230, duration: 0.34, ease: "power4.in" }, 2.2);
-      tl.to("#titular", { opacity: 0, duration: 0.22, ease: "power1.in" }, 2.3);
-      tl.set("#contorno", { opacity: 1 }, 2.2);
-      tl.to("#foto", { filter: "blur(16px)", scale: 1.03, duration: 0.5, ease: "power1.in" }, 2.2);
-      tl.to("#foto-img", { opacity: 0, duration: 0.45, ease: "sine.in" }, 2.25);
-      tl.to(
-        "#contorno",
-        { morphSVG: "#nube-destino", duration: 0.6, ease: "power2.inOut" },
-        T.corte - 0.6,
-      );
-      tl.to(
-        "#contorno",
-        { attr: { "stroke-width": 4 }, duration: 0.6, ease: "power2.inOut" },
-        T.corte - 0.6,
-      );
-      tl.to(
-        "#grad-contorno-fin",
-        { attr: { "stop-color": "#00A7E1" }, duration: 0.6, ease: "power2.inOut" },
-        T.corte - 0.6,
-      );
-
-      // ---- Escena 2: esquema de beneficios ----
-      tl.to("#nube-texto", { opacity: 1, y: 0, duration: 0.4, ease: "power3.out" }, 3.0);
-      tl.to(
-        "#anillo",
-        { attr: { "stroke-dashoffset": 0 }, duration: 0.8, ease: "power2.inOut" },
-        3.1,
-      );
-      tl.to(".proveedor", { opacity: 1, duration: 0.4, ease: "power1.out", stagger: 0.06 }, 3.3);
-
-      // Cada beneficio: el radio llega al nodo, el pulso lo activa, aparece el texto.
-      const orden = ["seguridad", "flexibilidad", "disponibilidad", "performance"];
-      orden.forEach((id, i) => {
-        const t = 3.6 + i * 0.5;
-        tl.to(
-          `#r-${id}`,
-          { attr: { "stroke-dashoffset": 0 }, duration: 0.3, ease: "power2.in" },
-          t,
-        );
-        tl.to(`#p-${id}`, { opacity: 1, scale: 1, duration: 0.25, ease: "power3.out" }, t + 0.12);
-        tl.to(`#n-${id}`, { opacity: 1, duration: 0.15, ease: "none" }, t + 0.3);
-        tl.to(
-          `#n-${id} .aro`,
-          { attr: { "stroke-dashoffset": 0 }, duration: 0.4, ease: "power2.out" },
-          t + 0.3,
-        );
-        tl.to(`#n-${id} .icono`, { opacity: 1, duration: 0.3, ease: "power1.out" }, t + 0.4);
-        tl.to(`#et-${id}`, { opacity: 1, y: 0, duration: 0.45, ease: "power3.out" }, t + 0.35);
-      });
-
-      tl.to("#pie .raya", { scaleX: 1, duration: 0.5, ease: "power2.out" }, 5.6);
-      tl.to("#pie-texto", { opacity: 1, duration: 0.4, ease: "power1.out" }, 5.7);
-
-      // Mantener el cuadro final para lectura hasta 8,0 s
-      tl.set({}, {}, 8);
+      tl.set({}, {}, 9);
 
       window.__timelines["main"] = tl;
       tl.seek(0);

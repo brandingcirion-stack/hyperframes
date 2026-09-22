@@ -1,0 +1,476 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <!-- Escena 4 del guion (15–24 s): Beneficios para tu negocio. El runtime solo usa el contenido de <template>. -->
+  </head>
+  <body>
+    <template>
+      <style>
+        @font-face {
+          font-family: "Maven Pro";
+          src: url("assets/fonts/MavenPro-latin.woff2") format("woff2");
+          font-weight: 400 700;
+          font-display: block;
+        }
+        /*
+          Proporción áurea (φ): diámetro del anillo / ancho de la nube = φ (600 / 371 px);
+          título en x = W/φ⁵ (173 px) con línea base en H/φ⁴ (158 px);
+          tamaños en pasos de √φ: 57 (título) · 45 (nube) · 36 (beneficio) · 28 (descripción).
+        */
+        #root {
+          position: absolute;
+          inset: 0;
+          font-family: "Maven Pro", sans-serif;
+          color: #ffffff;
+        }
+        #b-titulo {
+          position: absolute;
+          left: 173px;
+          top: 96px;
+          font-size: 57px;
+          font-weight: 400;
+          letter-spacing: 0.01em;
+          line-height: 1;
+        }
+        #b-titulo .acento {
+          color: #ef2ac1;
+        }
+        #b-barra {
+          position: absolute;
+          left: 176px;
+          top: 190px;
+          width: 92px;
+          height: 5px;
+          border-radius: 3px;
+          background: #ef2ac1;
+        }
+        #b-nube-texto {
+          position: absolute;
+          left: 760px;
+          top: 552px;
+          width: 400px;
+          text-align: center;
+          font-size: 45px;
+          font-weight: 500;
+          line-height: 1.12;
+          letter-spacing: 0.08em;
+        }
+        .b-etiqueta {
+          position: absolute;
+          width: 520px;
+        }
+        .b-etiqueta h3 {
+          font-size: 36px;
+          font-weight: 600;
+          letter-spacing: 0.01em;
+          margin: 0 0 4px;
+          color: #ffffff;
+        }
+        .b-etiqueta p {
+          font-size: 28px;
+          font-weight: 400;
+          letter-spacing: 0.02em;
+          margin: 0;
+        }
+        .b-etiqueta.derecha {
+          text-align: right;
+        }
+        #b-et-seguridad {
+          left: 1134px;
+          top: 280px;
+        }
+        #b-et-flexibilidad {
+          left: 1350px;
+          top: 580px;
+        }
+        #b-et-disponibilidad {
+          left: 1134px;
+          top: 880px;
+        }
+        #b-et-performance {
+          left: 50px;
+          top: 580px;
+        }
+        .radio-base {
+          stroke: #54565a;
+          stroke-width: 2;
+          opacity: 0.7;
+        }
+        .nodo-base {
+          stroke: #54565a;
+        }
+        .pulso {
+          opacity: 0;
+        }
+      </style>
+
+      <div id="root" data-composition-id="beneficios" data-width="1920" data-height="1080">
+        <h2 id="b-titulo">Beneficios para <span class="acento">tu negocio</span></h2>
+        <div id="b-barra"></div>
+
+        <svg
+          style="position: absolute; inset: 0"
+          width="1920"
+          height="1080"
+          viewBox="0 0 1920 1080"
+          aria-hidden="true"
+        >
+          <defs>
+            <linearGradient
+              id="b-grad-anillo"
+              x1="660"
+              y1="320"
+              x2="1260"
+              y2="920"
+              gradientUnits="userSpaceOnUse"
+            >
+              <stop offset="0" stop-color="#EF2AC1" />
+              <stop offset="1" stop-color="#00A7E1" />
+            </linearGradient>
+            <linearGradient id="b-grad-nube" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0" stop-color="#EF2AC1" />
+              <stop offset="1" stop-color="#00A7E1" />
+            </linearGradient>
+          </defs>
+          <circle
+            id="b-anillo"
+            cx="960"
+            cy="620"
+            r="300"
+            fill="none"
+            stroke="url(#b-grad-anillo)"
+            stroke-width="2"
+            opacity="0.45"
+          />
+          <!-- seguridad -->
+          <line class="radio-base" x1="960" y1="482" x2="960" y2="378" />
+          <line
+            id="b-r-seguridad"
+            x1="960"
+            y1="482"
+            x2="960"
+            y2="378"
+            stroke="#EF2AC1"
+            stroke-width="2"
+            pathLength="1"
+            stroke-dasharray="1"
+            stroke-dashoffset="1"
+          />
+          <circle
+            id="b-p-seguridad"
+            class="pulso"
+            cx="960"
+            cy="482"
+            r="8"
+            fill="#EF2AC1"
+            data-hasta-x="960"
+            data-hasta-y="378"
+          />
+          <circle
+            id="b-ping-seguridad"
+            cx="960"
+            cy="320"
+            r="58"
+            fill="none"
+            stroke="#EF2AC1"
+            stroke-width="2"
+            opacity="0"
+          />
+          <g
+            class="nodo-base"
+            fill="none"
+            stroke-width="3"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <circle cx="960" cy="320" r="58" fill="#000" />
+            <g transform="translate(928 288)">
+              <path d="M32 9 L50 16 V30 C50 43 42 51 32 55 C22 51 14 43 14 30 V16 Z" />
+              <rect x="25" y="30" width="14" height="11" rx="2" />
+              <path d="M28 30 V26 A4 4 0 0 1 36 26 V30" />
+            </g>
+          </g>
+          <g
+            id="b-n-seguridad"
+            class="nodo-luz"
+            stroke="#EF2AC1"
+            fill="none"
+            stroke-width="3"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            opacity="0"
+            style="filter: drop-shadow(0 0 12px #ef2ac188)"
+          >
+            <circle cx="960" cy="320" r="58" fill="#000" />
+            <g transform="translate(928 288)">
+              <path d="M32 9 L50 16 V30 C50 43 42 51 32 55 C22 51 14 43 14 30 V16 Z" />
+              <rect x="25" y="30" width="14" height="11" rx="2" />
+              <path d="M28 30 V26 A4 4 0 0 1 36 26 V30" />
+            </g>
+          </g>
+          <!-- flexibilidad -->
+          <line class="radio-base" x1="1146" y1="620" x2="1202" y2="620" />
+          <line
+            id="b-r-flexibilidad"
+            x1="1146"
+            y1="620"
+            x2="1202"
+            y2="620"
+            stroke="#00A7E1"
+            stroke-width="2"
+            pathLength="1"
+            stroke-dasharray="1"
+            stroke-dashoffset="1"
+          />
+          <circle
+            id="b-p-flexibilidad"
+            class="pulso"
+            cx="1146"
+            cy="620"
+            r="8"
+            fill="#00A7E1"
+            data-hasta-x="1202"
+            data-hasta-y="620"
+          />
+          <circle
+            id="b-ping-flexibilidad"
+            cx="1260"
+            cy="620"
+            r="58"
+            fill="none"
+            stroke="#00A7E1"
+            stroke-width="2"
+            opacity="0"
+          />
+          <g
+            class="nodo-base"
+            fill="none"
+            stroke-width="3"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <circle cx="1260" cy="620" r="58" fill="#000" />
+            <g transform="translate(1228 588)">
+              <path d="M20 44 H45 A9 9 0 0 0 46 26 A13 13 0 0 0 21 23 A10.5 10.5 0 0 0 20 44 Z" />
+            </g>
+          </g>
+          <g
+            id="b-n-flexibilidad"
+            class="nodo-luz"
+            stroke="#00A7E1"
+            fill="none"
+            stroke-width="3"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            opacity="0"
+            style="filter: drop-shadow(0 0 12px #00a7e188)"
+          >
+            <circle cx="1260" cy="620" r="58" fill="#000" />
+            <g transform="translate(1228 588)">
+              <path d="M20 44 H45 A9 9 0 0 0 46 26 A13 13 0 0 0 21 23 A10.5 10.5 0 0 0 20 44 Z" />
+            </g>
+          </g>
+          <!-- disponibilidad -->
+          <line class="radio-base" x1="960" y1="670" x2="960" y2="862" />
+          <line
+            id="b-r-disponibilidad"
+            x1="960"
+            y1="670"
+            x2="960"
+            y2="862"
+            stroke="#00A7E1"
+            stroke-width="2"
+            pathLength="1"
+            stroke-dasharray="1"
+            stroke-dashoffset="1"
+          />
+          <circle
+            id="b-p-disponibilidad"
+            class="pulso"
+            cx="960"
+            cy="670"
+            r="8"
+            fill="#00A7E1"
+            data-hasta-x="960"
+            data-hasta-y="862"
+          />
+          <circle
+            id="b-ping-disponibilidad"
+            cx="960"
+            cy="920"
+            r="58"
+            fill="none"
+            stroke="#00A7E1"
+            stroke-width="2"
+            opacity="0"
+          />
+          <g
+            class="nodo-base"
+            fill="none"
+            stroke-width="3"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <circle cx="960" cy="920" r="58" fill="#000" />
+            <g transform="translate(928 888)"><path d="M18 33 L28 43 L47 22" /></g>
+          </g>
+          <g
+            id="b-n-disponibilidad"
+            class="nodo-luz"
+            stroke="#00A7E1"
+            fill="none"
+            stroke-width="3"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            opacity="0"
+            style="filter: drop-shadow(0 0 12px #00a7e188)"
+          >
+            <circle cx="960" cy="920" r="58" fill="#000" />
+            <g transform="translate(928 888)"><path d="M18 33 L28 43 L47 22" /></g>
+          </g>
+          <!-- performance -->
+          <line class="radio-base" x1="789" y1="620" x2="718" y2="620" />
+          <line
+            id="b-r-performance"
+            x1="789"
+            y1="620"
+            x2="718"
+            y2="620"
+            stroke="#EF2AC1"
+            stroke-width="2"
+            pathLength="1"
+            stroke-dasharray="1"
+            stroke-dashoffset="1"
+          />
+          <circle
+            id="b-p-performance"
+            class="pulso"
+            cx="789"
+            cy="620"
+            r="8"
+            fill="#EF2AC1"
+            data-hasta-x="718"
+            data-hasta-y="620"
+          />
+          <circle
+            id="b-ping-performance"
+            cx="660"
+            cy="620"
+            r="58"
+            fill="none"
+            stroke="#EF2AC1"
+            stroke-width="2"
+            opacity="0"
+          />
+          <g
+            class="nodo-base"
+            fill="none"
+            stroke-width="3"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <circle cx="660" cy="620" r="58" fill="#000" />
+            <g transform="translate(628 588)"><path d="M36 8 L20 35 H31 L28 56 L44 27 H33 Z" /></g>
+          </g>
+          <g
+            id="b-n-performance"
+            class="nodo-luz"
+            stroke="#EF2AC1"
+            fill="none"
+            stroke-width="3"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            opacity="0"
+            style="filter: drop-shadow(0 0 12px #ef2ac188)"
+          >
+            <circle cx="660" cy="620" r="58" fill="#000" />
+            <g transform="translate(628 588)"><path d="M36 8 L20 35 H31 L28 56 L44 27 H33 Z" /></g>
+          </g>
+          <path
+            id="b-nube"
+            d="M828.2 669.4 C778.7 669.4 762.2 620.0 787.0 591.2 C796.8 555.7 836.4 542.5 865.2 554.1 C877.6 496.4 935.3 467.6 984.7 484.0 C1025.9 492.3 1054.8 525.2 1058.9 562.3 C1100.1 550.0 1145.4 578.8 1145.4 620.0 C1145.4 653.0 1120.7 669.4 1091.8 669.4 Z"
+            fill="none"
+            stroke="url(#b-grad-nube)"
+            stroke-width="4"
+            stroke-linejoin="round"
+            style="filter: drop-shadow(0 0 10px rgba(239, 42, 193, 0.45))"
+          />
+        </svg>
+
+        <div id="b-nube-texto">CLOUD<br />CONNECT</div>
+
+        <div id="b-et-seguridad" class="b-etiqueta" data-color="#EF2AC1">
+          <h3>Seguridad:</h3>
+          <p>tráfico privado.</p>
+        </div>
+        <div id="b-et-flexibilidad" class="b-etiqueta" data-color="#00A7E1">
+          <h3>Flexibilidad:</h3>
+          <p>múltiples proveedores cloud.</p>
+        </div>
+        <div id="b-et-disponibilidad" class="b-etiqueta" data-color="#00A7E1">
+          <h3>Disponibilidad:</h3>
+          <p>redundancia y SLA empresariales.</p>
+        </div>
+        <div id="b-et-performance" class="b-etiqueta derecha" data-color="#EF2AC1">
+          <h3>Performance:</h3>
+          <p>menor variabilidad.</p>
+        </div>
+      </div>
+
+      <script>
+        (() => {
+          const tl = gsap.timeline({ paused: true });
+          // Mismos tiempos que scripts/generar-sfx-beneficios.py (ENCENDIDOS, VIAJE y CIERRE).
+          const VIAJE = 0.45;
+          const encendidos = [
+            ["seguridad", 1.0],
+            ["flexibilidad", 2.6],
+            ["disponibilidad", 4.2],
+            ["performance", 5.8],
+          ];
+          const CIERRE = 7.3;
+
+          // Todo el contenido está visible desde el inicio: solo se iluminan los iconos.
+          encendidos.forEach(([id, t]) => {
+            const pulso = document.querySelector("#b-p-" + id);
+            const etiqueta = document.querySelector("#b-et-" + id + " h3");
+            const color = document.querySelector("#b-et-" + id).dataset.color;
+            // El pulso sale de la nube y recorre el radio; el trazo de color lo sigue.
+            tl.set(pulso, { opacity: 1 }, t);
+            tl.to(
+              pulso,
+              {
+                attr: { cx: +pulso.dataset.hastaX, cy: +pulso.dataset.hastaY },
+                duration: VIAJE,
+                ease: "power2.in",
+              },
+              t,
+            );
+            tl.to(
+              "#b-r-" + id,
+              { attr: { "stroke-dashoffset": 0 }, duration: VIAJE, ease: "power2.in" },
+              t,
+            );
+            tl.set(pulso, { opacity: 0 }, t + VIAJE);
+            // Llegada: el nodo se enciende en el mismo cuadro, con un halo que se disipa.
+            tl.to("#b-n-" + id, { opacity: 1, duration: 0.3, ease: "power2.out" }, t + VIAJE);
+            tl.fromTo(
+              "#b-ping-" + id,
+              { attr: { r: 58 }, opacity: 0.6 },
+              { attr: { r: 86 }, opacity: 0, duration: 0.7, ease: "power2.out" },
+              t + VIAJE,
+            );
+            tl.to(etiqueta, { color, duration: 0.3, ease: "power2.out" }, t + VIAJE);
+          });
+
+          // Cierre: con los cuatro beneficios activos, el anillo se completa en intensidad.
+          tl.to("#b-anillo", { opacity: 0.85, duration: 0.6, ease: "sine.inOut" }, CIERRE);
+          tl.set({}, {}, 9);
+
+          window.__timelines["beneficios"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

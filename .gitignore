@@ -164,6 +164,7 @@ launch-video*/
 !skills/launch-video/
 ab-test/
 compositions/
+!proyectos/*/compositions/
 video-6-2-patched/
 claude-design-hyperframes-video/
 # Per-site video work at the repo root (huly-*, raycast-*, etc.)

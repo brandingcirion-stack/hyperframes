@@ -14,11 +14,13 @@ from skimage.transform import resize
 W, H = 1100, 700
 SALIDA = Path(__file__).resolve().parent.parent / "assets" / "img"
 
-# (semilla, color RGB) — blanco lavanda, azul claro, magenta suave
+# (semilla, color RGB) — blanco lavanda, azul claro, magenta suave, lavanda, azul
 VAPORES = [
     (11, (236, 228, 255)),
     (23, (170, 222, 248)),
     (37, (246, 170, 226)),
+    (41, (214, 206, 250)),
+    (53, (150, 196, 240)),
 ]
 
 

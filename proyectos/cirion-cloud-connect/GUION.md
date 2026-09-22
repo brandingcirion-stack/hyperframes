@@ -1,53 +1,62 @@
-# Cirion · Cloud Connect — muestra animada v02
+# Cirion · Cloud Connect — guion y estado
 
 - **Fuente:** `Cirion-Info-Cloud-Connect-Externo-ESP.pdf` (lámina vertical única, Illustrator, Maven Pro).
-- **Formato de la muestra:** horizontal 1920×1080, 30 fps, 8,0 s, español, H.264 sin audio.
-- **Alcance:** muestra de estilo y movimiento para aprobar antes del video completo. Textos literales de la lámina; esquema reconstruido en vectores.
-- **v02 (comentarios del 22/09):** se agrega la foto del ejecutivo, un fondo de vapor muy difuminado que asciende y se esfuma, y diagramación con proporción áurea. Se mantiene el ritmo aprobado de v01.
+- **Pieza final:** 30 s, horizontal 1920×1080, 30 fps, español. Sin locución; música y efectos sincronizados.
+- **Entrega actual:** muestra v03 — solo la escena «Beneficios para tu negocio» (15–24 s), 9 s. Se espera aprobación antes del video completo.
 
-## Proporción áurea (φ ≈ 1,618) aplicada
+## Guion aprobado (texto exacto en pantalla)
 
-- Columnas: foto en 0–0,382·W (733 px); texto desde 733 + H/φ⁵ (97 px) = 830 px.
-- Horizontales: 0,382·H = 412 px (línea de los ojos del ejecutivo y tope del titular) y 0,618·H = 668 px (base del titular).
-- Esquema: diámetro del anillo / ancho de la nube = φ (660 / 408 px).
-- Escala tipográfica en pasos de √φ: 93 · 73 · 57 · 45 · 36 · 28 · 22 px (titular 93, nube 45, beneficios 36/28, proveedores y pie 22).
+| Tiempo  | Texto                                                                                                                                                                                       | Animación                                                                                                                    |
+| ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| 00–04 s | ¿Qué ocurre entre tus usuarios y la nube?                                                                                                                                                   | Revelar al ejecutivo y la pregunta. Destacar «usuarios» y «nube» en magenta. Un filamento conecta ambos conceptos.           |
+| 04–09 s | 90% / de las organizaciones adoptará estrategias de nube híbrida hasta 2027.\* / \*Fuente: Gartner.                                                                                         | Aparece el globo con el porcentaje. Cifra, explicación y fuente estables para leer.                                          |
+| 09–15 s | Cloud Connect / Conexión privada entre tu red y los principales proveedores cloud.                                                                                                          | Dibujar la conexión desde «Tu red», a través de Cloud Connect, hacia los proveedores. Activar los destinos con pulsos.       |
+| 15–24 s | Beneficios para tu negocio / Seguridad: tráfico privado. / Performance: menor variabilidad. / Flexibilidad: múltiples proveedores cloud. / Disponibilidad: redundancia y SLA empresariales. | Los cuatro beneficios alrededor de la nube desde el inicio. Iluminar cada icono en secuencia, con todos los textos visibles. |
+| 24–30 s | Cloud Connect la acerca a tu red. / Conectividad privada para tus aplicaciones.                                                                                                             | Revelar la ciudad y sus conexiones. Integrar el logo oficial. Cierre completo estable durante los últimos 4 s.               |
 
-## Guion técnico
+## Muestra v03 · escena de beneficios (local 0–9 s = 15–24 s del video)
 
-| Entrada–salida | Texto en pantalla                                                                       | Acción visual                                                                                                                                                                                         | Locución | Sonido    | Activo / fuente                              |
-| -------------- | --------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | --------- | -------------------------------------------- |
-| 0,00–2,20      | «¿Qué ocurre entre tus usuarios y la nube?»                                             | Foto del ejecutivo (volteada como en la lámina) aparece y se asienta (escala 1,04→1). Entrada escalonada del titular; «usuarios» y «nube» pasan a magenta en 1,0 y 1,3 s. Vapor de fondo ascendiendo. | —        | Pendiente | Foto y titular de la lámina; vapor generado  |
-| 2,20–2,90      | —                                                                                       | El titular sale hacia la derecha. La foto se desenfoca y se esfuma como vapor; su contorno magenta se transforma en la nube y viaja al centro.                                                        | —        | Pendiente | Contorno trazado desde la máscara de la foto |
-| 2,90–3,60      | «CLOUD CONNECT»                                                                         | Traspaso de la nube (morph); aparece el nombre; se dibuja el anillo; aparecen los proveedores.                                                                                                        | —        | Pendiente | Esquema de beneficios                        |
-| 3,60–5,90      | SEGURIDAD · FLEXIBILIDAD · DISPONIBILIDAD · PERFORMANCE con sus descripciones literales | En sentido horario, cada radio llega al nodo, el pulso lo activa, se dibuja el icono y aparece el texto (0,5 s entre beneficios).                                                                     | —        | Pendiente | Esquema de beneficios                        |
-| 5,60–8,00      | «Conexiones privadas diseñadas para entornos empresariales.»                            | Líneas del pie y texto; cuadro final estable para lectura (~2,1 s).                                                                                                                                   | —        | Pendiente | Pie del esquema                              |
+| Entrada–salida | Acción visual                                                                                                         | Sonido (sintetizado)                                 |
+| -------------- | --------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| 0,00–1,00      | Título, nube, anillo, nodos atenuados y los cuatro textos visibles desde el primer cuadro. Vapor de fondo.            | —                                                    |
+| 1,00–1,45      | Un pulso sale de la nube hacia Seguridad; al llegar, el icono se ilumina con un halo breve y el nombre toma su color. | Barrido suave (centro) + pulso en 1,45 s (centro)    |
+| 2,60–3,05      | Igual hacia Flexibilidad.                                                                                             | Barrido + pulso en 3,05 s (derecha 0,35)             |
+| 4,20–4,65      | Igual hacia Disponibilidad.                                                                                           | Barrido + pulso en 4,65 s (centro)                   |
+| 5,80–6,25      | Igual hacia Performance.                                                                                              | Barrido + pulso en 6,25 s (izquierda 0,35)           |
+| 7,30–9,00      | Con los cuatro activos, el anillo gana intensidad. Cuadro estable.                                                    | Acorde suave en 7,3 s, estéreo por leve desafinación |
 
-## Cue sheet de audio (propuesta; nada obtenido todavía)
+Orden de encendido: horario (Seguridad → Flexibilidad → Disponibilidad → Performance), el mismo ritmo aprobado en v01–v02.
 
-- Música base suave desde 0,0 s; bajarla bajo la locución si se agrega.
-- Pulso sutil en 1,25 s (aparece la nube).
-- Soplo/vapor suave en 2,2–2,9 s (la foto se esfuma y el contorno se transforma).
-- Cuatro pulsos breves en 3,72 / 4,22 / 4,72 / 5,22 s (activación de los nodos). Sin whoosh en cada entrada.
-- Objetivo inicial: −16 LUFS integrados, true peak ≤ −1 dBTP; medir en el archivo final.
+## Proporción áurea (φ ≈ 1,618)
+
+- Escena de beneficios: diámetro del anillo / ancho de la nube = φ (600 / 371 px); título en x = W/φ⁵ (173 px) con línea base en H/φ⁴ (158 px).
+- Escala tipográfica en pasos de √φ: 93 · 73 · 57 · 45 · 36 · 28 · 22 px (título 57, nube 45, beneficio 36, descripción 28).
+- Apertura (v02): foto en 0–0,382·W; texto desde 830 px; ojos y tope del titular en 0,382·H; base en 0,618·H.
+
+## Audio
+
+- Efectos: `scripts/generar-sfx-beneficios.py` (determinista, sin material de terceros). Medido en el MP4 v03: −20,7 LUFS integrados, pico −3,0 dBTP; mezcla mono −24,1 LUFS (caída esperada de ~3 dB, sin cancelaciones).
+- **Música: pendiente.** No hay pista con licencia; el objetivo de −16 LUFS / ≤ −1 dBTP se aplicará a la mezcla completa con música.
 
 ## Decisiones y pendientes
 
-- **Logo:** no incluido. Falta el archivo oficial (SVG/PNG); no se recrea.
-- **Proveedores cloud:** se muestran como nombres en texto gris, no como logotipos de terceros.
-- **Foto del ejecutivo:** extraída del PDF con su máscara (1024×1536, baja resolución para 1080p: se muestra a 0,74×). Para la pieza final conviene el archivo original en alta y confirmar sus derechos de uso.
-- **Animación de la boca:** no realizada; pendiente de decisión (ver notas de entrega).
-- **Vapor:** texturas propias generadas con `scripts/generar-vapor.py` (semilla fija; requiere numpy, pillow y scikit-image).
-- **Cifra 90 % (Gartner):** la lámina solo cita «Fuente: Gartner». Antes de usarla en la pieza final hace falta el informe, fecha y URL verificables.
-- **Audio:** sin música, voz ni efectos con licencia; la muestra es muda.
-- **Estructura para la pieza completa:** separar cada escena en una sub-composición (`compositions/`) para resolver los avisos de `lint`.
+- **Logo oficial** (escena 24–30 s): falta el archivo SVG/PNG; no se recrea.
+- **Gartner (90 %):** completar informe, fecha y URL antes de publicar.
+- **Foto del ejecutivo:** extraída del PDF (1024×1536); conviene el original en alta y confirmar derechos de uso. Sin animación de boca (el guion no la pide).
+- **Proveedores cloud** (escena 09–15 s): nombres en texto, no logotipos de terceros, salvo que se entreguen los aprobados.
+- **Estructura:** `index.html` anfitrión + sub-composiciones en `compositions/` (vapor, beneficios). La apertura v02 queda en el historial de Git (`bdbc001`) para reutilizarla.
+
+## Activos
+
+- `assets/fonts/MavenPro-latin.woff2` — Maven Pro (Google Fonts, OFL), servida localmente.
+- `assets/img/ejecutivo.webp` — foto del PDF con su máscara, volteada como en la lámina.
+- `assets/img/vapor-1…5.webp` — `scripts/generar-vapor.py` (semillas fijas; numpy, pillow, scikit-image).
+- `assets/vendor/` — GSAP y MorphSVGPlugin 3.15.0 (licencia estándar gratuita de GSAP); el CDN público está bloqueado en este entorno.
 
 ## Comandos verificados
 
 ```bash
+node ../../packages/cli/bin/hyperframes.mjs lint
 node ../../packages/cli/bin/hyperframes.mjs check
-node ../../packages/cli/bin/hyperframes.mjs render --output renders/cirion-cloud-connect_es_1920x1080_muestra_v02.mp4 --fps 30
-# Verificador de costuras (como root requiere un Chrome con --no-sandbox en CHROME_PATH)
-node ../../.claude/skills/motion-doctrine/scripts/seam-gate.mjs verify --ledger ledger.json --project .
+node ../../packages/cli/bin/hyperframes.mjs render --output renders/cirion-cloud-connect_es_1920x1080_beneficios_v03.mp4 --fps 30
 ```
-
-GSAP y MorphSVGPlugin se cargan desde `assets/vendor/` (3.15.0, licencia estándar gratuita de GSAP) porque el CDN público está bloqueado en este entorno.
