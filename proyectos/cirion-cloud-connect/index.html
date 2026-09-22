@@ -1,0 +1,666 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <!-- GSAP local: el CDN público está bloqueado en este entorno y evita fetches en render. -->
+    <script src="assets/vendor/gsap.min.js"></script>
+    <style>
+      :root {
+        --negro: #000000;
+        --blanco: #ffffff;
+        --magenta: #ef2ac1;
+        --azul: #00a7e1;
+        --azul-profundo: #001f60;
+        --gris: #54565a;
+        --gris-texto: #8e9096;
+        --fuente: "Maven Pro", sans-serif;
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: var(--negro);
+      }
+      #root {
+        position: relative;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: var(--negro);
+        font-family: var(--fuente);
+        color: var(--blanco);
+      }
+      .escena,
+      .capa {
+        position: absolute;
+        inset: 0;
+      }
+      .acento {
+        color: var(--magenta);
+      }
+
+      /* Escena 1 — pregunta */
+      #titular {
+        position: absolute;
+        left: 200px;
+        top: 352px;
+        font-size: 92px;
+        font-weight: 700;
+        line-height: 1.08;
+        letter-spacing: -0.01em;
+      }
+      #titular .linea {
+        display: block;
+      }
+
+      /* Nube compartida (elemento de continuidad entre escenas) */
+      #nube-texto {
+        position: absolute;
+        left: 760px;
+        top: 432px;
+        width: 400px;
+        text-align: center;
+        font-size: 44px;
+        font-weight: 500;
+        line-height: 1.12;
+        letter-spacing: 0.08em;
+      }
+
+      /* Escena 2 — beneficios */
+      .etiqueta {
+        position: absolute;
+        width: 380px;
+      }
+      .etiqueta h3 {
+        font-size: 32px;
+        font-weight: 600;
+        letter-spacing: 0.03em;
+        margin-bottom: 8px;
+      }
+      .etiqueta p {
+        font-size: 27px;
+        font-weight: 400;
+        line-height: 1.32;
+        letter-spacing: 0.02em;
+      }
+      .etiqueta.magenta h3 {
+        color: var(--magenta);
+      }
+      .etiqueta.azul h3 {
+        color: var(--azul);
+      }
+      .etiqueta.derecha {
+        text-align: right;
+      }
+      #et-seguridad {
+        left: 1124px;
+        top: 118px;
+      }
+      #et-flexibilidad {
+        left: 1380px;
+        top: 464px;
+        width: 360px;
+      }
+      #et-disponibilidad {
+        left: 1110px;
+        top: 832px;
+      }
+      #et-performance {
+        left: 160px;
+        top: 476px;
+      }
+      .proveedor {
+        position: absolute;
+        font-size: 22px;
+        font-weight: 500;
+        letter-spacing: 0.04em;
+        color: var(--gris-texto);
+        white-space: nowrap;
+      }
+      #pie {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 1000px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 28px;
+        font-size: 24px;
+        letter-spacing: 0.03em;
+        color: var(--gris-texto);
+      }
+      #pie .raya {
+        width: 360px;
+        height: 1px;
+        transform-origin: center;
+      }
+      #pie .raya.izq {
+        background: linear-gradient(90deg, transparent, var(--magenta));
+      }
+      #pie .raya.der {
+        background: linear-gradient(90deg, var(--azul), transparent);
+      }
+      .glow-m {
+        filter: drop-shadow(0 0 10px rgba(239, 42, 193, 0.45));
+      }
+      .glow-a {
+        filter: drop-shadow(0 0 10px rgba(0, 167, 225, 0.45));
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      data-hf-id="hf-s1pe"
+      id="root"
+      data-composition-id="main"
+      data-start="0"
+      data-duration="8"
+      data-width="1920"
+      data-height="1080"
+      data-fps="30"
+    >
+      <!-- ESCENA 1 · 0,0–2,9 s · Pregunta de apertura (texto literal de la lámina) -->
+      <div
+        data-hf-id="hf-24x4"
+        id="s1"
+        class="escena clip"
+        data-start="0"
+        data-duration="2.9"
+        data-track-index="0"
+      >
+        <h1 data-hf-id="hf-g88k" id="titular">
+          <span data-hf-id="hf-292z" class="linea" id="l1">¿Qué ocurre entre</span>
+          <span data-hf-id="hf-fwx3" class="linea" id="l2"
+            >tus <span data-hf-id="hf-x6ho" id="w-usuarios">usuarios</span> y</span
+          >
+          <span data-hf-id="hf-ht0n" class="linea" id="l3"
+            >la <span data-hf-id="hf-rb4q" id="w-nube">nube</span>?</span
+          >
+        </h1>
+        <!-- Nube (portador): viaja a la izquierda y se detiene en el centro justo en el corte -->
+        <div data-hf-id="hf-zuw5" id="nube-a" class="capa">
+          <svg
+            data-hf-id="hf-p153"
+            class="capa"
+            width="1920"
+            height="1080"
+            viewBox="0 0 1920 1080"
+            aria-hidden="true"
+          >
+            <defs data-hf-id="hf-mh0t">
+              <linearGradient
+                data-hf-id="hf-bduf"
+                id="grad-nube-a"
+                x1="735"
+                y1="0"
+                x2="1185"
+                y2="0"
+                gradientUnits="userSpaceOnUse"
+              >
+                <stop data-hf-id="hf-8w7a" offset="0" stop-color="#EF2AC1" />
+                <stop data-hf-id="hf-d4a9" offset="1" stop-color="#00A7E1" />
+              </linearGradient>
+            </defs>
+            <path
+              data-hf-id="hf-a2hi"
+              id="nube-trazo"
+              class="glow-m"
+              d="M800 600 C740 600 720 540 750 505 C762 462 810 446 845 460 C860 390 930 355 990 375 C1040 385 1075 425 1080 470 C1130 455 1185 490 1185 540 C1185 580 1155 600 1120 600 Z"
+              fill="none"
+              stroke="url(#grad-nube-a)"
+              stroke-width="4"
+              stroke-linejoin="round"
+              pathLength="1"
+              stroke-dasharray="1"
+              stroke-dashoffset="1"
+            />
+          </svg>
+        </div>
+      </div>
+
+      <!-- ESCENA 2 · 2,9–8,0 s · Beneficios de Cloud Connect (esquema de la lámina) -->
+      <div
+        data-hf-id="hf-dzay"
+        id="s2"
+        class="escena clip"
+        data-start="2.9"
+        data-duration="5.1"
+        data-track-index="1"
+      >
+        <svg
+          data-hf-id="hf-stnr"
+          class="capa"
+          width="1920"
+          height="1080"
+          viewBox="0 0 1920 1080"
+          aria-hidden="true"
+        >
+          <defs data-hf-id="hf-vl9d">
+            <linearGradient
+              data-hf-id="hf-mo2d"
+              id="grad-anillo"
+              x1="630"
+              y1="210"
+              x2="1290"
+              y2="870"
+              gradientUnits="userSpaceOnUse"
+            >
+              <stop data-hf-id="hf-bk0a" offset="0" stop-color="#EF2AC1" />
+              <stop data-hf-id="hf-ef39" offset="1" stop-color="#00A7E1" />
+            </linearGradient>
+          </defs>
+          <circle
+            data-hf-id="hf-zj9r"
+            id="anillo"
+            cx="960"
+            cy="540"
+            r="330"
+            fill="none"
+            stroke="url(#grad-anillo)"
+            stroke-width="2"
+            opacity="0.55"
+            pathLength="1"
+            stroke-dasharray="1"
+            stroke-dashoffset="1"
+            transform="rotate(-90 960 540)"
+          />
+
+          <!-- Radios: nube → nodo -->
+          <line
+            data-hf-id="hf-a5vb"
+            id="r-seguridad"
+            class="radio"
+            x1="960"
+            y1="368"
+            x2="960"
+            y2="268"
+            stroke="#EF2AC1"
+            stroke-width="2"
+            pathLength="1"
+            stroke-dasharray="1"
+            stroke-dashoffset="1"
+          />
+          <line
+            data-hf-id="hf-zgt0"
+            id="r-flexibilidad"
+            class="radio"
+            x1="1185"
+            y1="540"
+            x2="1232"
+            y2="540"
+            stroke="#00A7E1"
+            stroke-width="2"
+            pathLength="1"
+            stroke-dasharray="1"
+            stroke-dashoffset="1"
+          />
+          <line
+            data-hf-id="hf-ev3m"
+            id="r-disponibilidad"
+            class="radio"
+            x1="960"
+            y1="600"
+            x2="960"
+            y2="812"
+            stroke="#00A7E1"
+            stroke-width="2"
+            pathLength="1"
+            stroke-dasharray="1"
+            stroke-dashoffset="1"
+          />
+          <line
+            data-hf-id="hf-36dr"
+            id="r-performance"
+            class="radio"
+            x1="735"
+            y1="540"
+            x2="688"
+            y2="540"
+            stroke="#EF2AC1"
+            stroke-width="2"
+            pathLength="1"
+            stroke-dasharray="1"
+            stroke-dashoffset="1"
+          />
+
+          <!-- Pulsos en los radios -->
+          <circle
+            data-hf-id="hf-tu1q"
+            id="p-seguridad"
+            class="glow-m"
+            cx="960"
+            cy="318"
+            r="9"
+            fill="#EF2AC1"
+          />
+          <circle
+            data-hf-id="hf-drbq"
+            id="p-flexibilidad"
+            class="glow-a"
+            cx="1208"
+            cy="540"
+            r="9"
+            fill="#00A7E1"
+          />
+          <circle
+            data-hf-id="hf-hlwq"
+            id="p-disponibilidad"
+            class="glow-a"
+            cx="960"
+            cy="706"
+            r="9"
+            fill="#00A7E1"
+          />
+          <circle
+            data-hf-id="hf-ud2p"
+            id="p-performance"
+            class="glow-m"
+            cx="711"
+            cy="540"
+            r="9"
+            fill="#EF2AC1"
+          />
+
+          <!-- Nodos con iconos outline -->
+          <g
+            data-hf-id="hf-gcbj"
+            id="n-seguridad"
+            class="nodo glow-m"
+            stroke="#EF2AC1"
+            fill="none"
+            stroke-width="3"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <circle
+              data-hf-id="hf-qsil"
+              cx="960"
+              cy="210"
+              r="58"
+              fill="#000"
+              pathLength="1"
+              stroke-dasharray="1"
+              stroke-dashoffset="1"
+              class="aro"
+              transform="rotate(-90 960 210)"
+            />
+            <g data-hf-id="hf-3syb" class="icono" transform="translate(928 178)">
+              <path
+                data-hf-id="hf-e8ps"
+                d="M32 9 L50 16 V30 C50 43 42 51 32 55 C22 51 14 43 14 30 V16 Z"
+              />
+              <rect data-hf-id="hf-l18w" x="25" y="30" width="14" height="11" rx="2" />
+              <path data-hf-id="hf-5l4k" d="M28 30 V26 A4 4 0 0 1 36 26 V30" />
+            </g>
+          </g>
+          <g
+            data-hf-id="hf-j9z4"
+            id="n-flexibilidad"
+            class="nodo glow-a"
+            stroke="#00A7E1"
+            fill="none"
+            stroke-width="3"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <circle
+              data-hf-id="hf-dtuj"
+              cx="1290"
+              cy="540"
+              r="58"
+              fill="#000"
+              pathLength="1"
+              stroke-dasharray="1"
+              stroke-dashoffset="1"
+              class="aro"
+              transform="rotate(-90 1290 540)"
+            />
+            <g data-hf-id="hf-crp9" class="icono" transform="translate(1258 508)">
+              <path
+                data-hf-id="hf-q9kd"
+                d="M20 44 H45 A9 9 0 0 0 46 26 A13 13 0 0 0 21 23 A10.5 10.5 0 0 0 20 44 Z"
+              />
+            </g>
+          </g>
+          <g
+            data-hf-id="hf-8rnm"
+            id="n-disponibilidad"
+            class="nodo glow-a"
+            stroke="#00A7E1"
+            fill="none"
+            stroke-width="3"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <circle
+              data-hf-id="hf-f065"
+              cx="960"
+              cy="870"
+              r="58"
+              fill="#000"
+              pathLength="1"
+              stroke-dasharray="1"
+              stroke-dashoffset="1"
+              class="aro"
+              transform="rotate(-90 960 870)"
+            />
+            <g data-hf-id="hf-zlxs" class="icono" transform="translate(928 838)">
+              <path data-hf-id="hf-hdpo" d="M18 33 L28 43 L47 22" />
+            </g>
+          </g>
+          <g
+            data-hf-id="hf-f0a3"
+            id="n-performance"
+            class="nodo glow-m"
+            stroke="#EF2AC1"
+            fill="none"
+            stroke-width="3"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <circle
+              data-hf-id="hf-kxjt"
+              cx="630"
+              cy="540"
+              r="58"
+              fill="#000"
+              pathLength="1"
+              stroke-dasharray="1"
+              stroke-dashoffset="1"
+              class="aro"
+              transform="rotate(-90 630 540)"
+            />
+            <g data-hf-id="hf-jqlr" class="icono" transform="translate(598 508)">
+              <path data-hf-id="hf-4zam" d="M36 8 L20 35 H31 L28 56 L44 27 H33 Z" />
+            </g>
+          </g>
+        </svg>
+
+        <!-- Proveedores (nombres, no logotipos) -->
+        <div data-hf-id="hf-5yxq" class="proveedor" style="left: 780px; top: 380px">AWS</div>
+        <div data-hf-id="hf-0r8i" class="proveedor" style="left: 1090px; top: 390px">Azure</div>
+        <div data-hf-id="hf-daov" class="proveedor" style="left: 712px; top: 680px">
+          Google Cloud
+        </div>
+        <div data-hf-id="hf-z474" class="proveedor" style="left: 806px; top: 756px">IBM Cloud</div>
+        <div data-hf-id="hf-a1sm" class="proveedor" style="left: 1062px; top: 690px">
+          Oracle Cloud
+        </div>
+
+        <!-- Nube B: continúa exactamente donde terminó la nube A -->
+        <div data-hf-id="hf-3t06" id="nube-b" class="capa">
+          <svg
+            data-hf-id="hf-sfcq"
+            class="capa"
+            width="1920"
+            height="1080"
+            viewBox="0 0 1920 1080"
+            aria-hidden="true"
+          >
+            <defs data-hf-id="hf-ws6g">
+              <linearGradient
+                data-hf-id="hf-2kpm"
+                id="grad-nube-b"
+                x1="735"
+                y1="0"
+                x2="1185"
+                y2="0"
+                gradientUnits="userSpaceOnUse"
+              >
+                <stop data-hf-id="hf-bybb" offset="0" stop-color="#EF2AC1" />
+                <stop data-hf-id="hf-fm0c" offset="1" stop-color="#00A7E1" />
+              </linearGradient>
+            </defs>
+            <path
+              data-hf-id="hf-1nlf"
+              id="nube-b-trazo"
+              class="glow-m"
+              d="M800 600 C740 600 720 540 750 505 C762 462 810 446 845 460 C860 390 930 355 990 375 C1040 385 1075 425 1080 470 C1130 455 1185 490 1185 540 C1185 580 1155 600 1120 600 Z"
+              fill="none"
+              stroke="url(#grad-nube-b)"
+              stroke-width="4"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </div>
+
+        <div data-hf-id="hf-5kwz" id="nube-texto">CLOUD<br data-hf-id="hf-x5px" />CONNECT</div>
+
+        <div data-hf-id="hf-ldcz" id="et-seguridad" class="etiqueta magenta">
+          <h3 data-hf-id="hf-85ri">SEGURIDAD</h3>
+          <p data-hf-id="hf-tnpy">
+            Tráfico privado<br data-hf-id="hf-rsrt" />y aislado de Internet.
+          </p>
+        </div>
+        <div data-hf-id="hf-clt9" id="et-flexibilidad" class="etiqueta azul">
+          <h3 data-hf-id="hf-dywp">FLEXIBILIDAD</h3>
+          <p data-hf-id="hf-o2u3">
+            Acceso a múltiples<br data-hf-id="hf-szow" />proveedores cloud<br
+              data-hf-id="hf-sldv"
+            />desde una sola<br data-hf-id="hf-qluq" />arquitectura.
+          </p>
+        </div>
+        <div data-hf-id="hf-a6ab" id="et-disponibilidad" class="etiqueta azul">
+          <h3 data-hf-id="hf-p5b7">DISPONIBILIDAD</h3>
+          <p data-hf-id="hf-e324">
+            Diseño redundante<br data-hf-id="hf-q7jp" />y SLA empresariales.
+          </p>
+        </div>
+        <div data-hf-id="hf-elpj" id="et-performance" class="etiqueta magenta derecha">
+          <h3 data-hf-id="hf-pgpe">PERFORMANCE</h3>
+          <p data-hf-id="hf-3s3j">
+            Menor variabilidad<br data-hf-id="hf-regs" />para aplicaciones<br
+              data-hf-id="hf-r05r"
+            />críticas.
+          </p>
+        </div>
+
+        <div data-hf-id="hf-3sk9" id="pie">
+          <span data-hf-id="hf-zzei" class="raya izq"></span>
+          <span data-hf-id="hf-7rcm" id="pie-texto"
+            >Conexiones privadas diseñadas para entornos empresariales.</span
+          >
+          <span data-hf-id="hf-e6n5" class="raya der"></span>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const tl = gsap.timeline({ paused: true });
+      const T = { corte: 2.9 };
+
+      // ---- Estados iniciales ----
+      gsap.set(["#l1", "#l2", "#l3"], { y: 50, opacity: 0 });
+      gsap.set("#nube-a", { x: 480 });
+      gsap.set("#nube-texto", { opacity: 0, y: 14 });
+      gsap.set(".icono", { opacity: 0 });
+      gsap.set(".nodo", { opacity: 0 });
+      gsap.set(["#p-seguridad", "#p-flexibilidad", "#p-disponibilidad", "#p-performance"], {
+        opacity: 0,
+        scale: 0,
+        transformOrigin: "50% 50%",
+      });
+      gsap.set(".etiqueta", { opacity: 0, y: 16 });
+      gsap.set(".proveedor", { opacity: 0 });
+      gsap.set("#pie-texto", { opacity: 0 });
+      gsap.set("#pie .raya", { scaleX: 0 });
+
+      // ---- Escena 1: pregunta ----
+      tl.to(
+        ["#l1", "#l2", "#l3"],
+        { y: 0, opacity: 1, duration: 0.5, ease: "power3.out", stagger: 0.12 },
+        0.1,
+      );
+      // Los acentos se activan cuando aparece la nube: la relación usuarios ↔ nube
+      tl.fromTo(
+        "#w-usuarios",
+        { color: "#ffffff" },
+        { color: "#EF2AC1", duration: 0.4, ease: "power2.out" },
+        1.0,
+      );
+      tl.to(
+        "#nube-trazo",
+        { attr: { "stroke-dashoffset": 0 }, duration: 0.9, ease: "power2.inOut" },
+        1.25,
+      );
+      tl.fromTo(
+        "#w-nube",
+        { color: "#ffffff" },
+        { color: "#EF2AC1", duration: 0.4, ease: "power2.out" },
+        1.25,
+      );
+
+      // ---- Corte (cut-the-curve hacia la izquierda) ----
+      tl.to("#titular", { x: -230, duration: 0.34, ease: "power4.in" }, T.corte - 0.5);
+      tl.to("#titular", { opacity: 0, duration: 0.22, ease: "power1.in" }, T.corte - 0.4);
+      // La nube viaja en la misma dirección y llega al centro en el corte
+      tl.to("#nube-a", { x: 0, duration: 0.45, ease: "power2.inOut" }, T.corte - 0.45);
+
+      // ---- Escena 2: esquema de beneficios ----
+      tl.to("#nube-texto", { opacity: 1, y: 0, duration: 0.4, ease: "power3.out" }, 3.0);
+      tl.to(
+        "#anillo",
+        { attr: { "stroke-dashoffset": 0 }, duration: 0.8, ease: "power2.inOut" },
+        3.1,
+      );
+      tl.to(".proveedor", { opacity: 1, duration: 0.4, ease: "power1.out", stagger: 0.06 }, 3.3);
+
+      // Cada beneficio: el radio llega al nodo, el pulso lo activa, aparece el texto.
+      const orden = ["seguridad", "flexibilidad", "disponibilidad", "performance"];
+      orden.forEach((id, i) => {
+        const t = 3.6 + i * 0.5;
+        tl.to(
+          `#r-${id}`,
+          { attr: { "stroke-dashoffset": 0 }, duration: 0.3, ease: "power2.in" },
+          t,
+        );
+        tl.to(`#p-${id}`, { opacity: 1, scale: 1, duration: 0.25, ease: "power3.out" }, t + 0.12);
+        tl.to(`#n-${id}`, { opacity: 1, duration: 0.15, ease: "none" }, t + 0.3);
+        tl.to(
+          `#n-${id} .aro`,
+          { attr: { "stroke-dashoffset": 0 }, duration: 0.4, ease: "power2.out" },
+          t + 0.3,
+        );
+        tl.to(`#n-${id} .icono`, { opacity: 1, duration: 0.3, ease: "power1.out" }, t + 0.4);
+        tl.to(`#et-${id}`, { opacity: 1, y: 0, duration: 0.45, ease: "power3.out" }, t + 0.35);
+      });
+
+      tl.to("#pie .raya", { scaleX: 1, duration: 0.5, ease: "power2.out" }, 5.6);
+      tl.to("#pie-texto", { opacity: 1, duration: 0.4, ease: "power1.out" }, 5.7);
+
+      // Mantener el cuadro final para lectura hasta 8,0 s
+      tl.set({}, {}, 8);
+
+      window.__timelines["main"] = tl;
+      tl.seek(0);
+    </script>
+  </body>
+</html>

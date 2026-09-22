@@ -1,0 +1,25 @@
+{
+  "fps": 30,
+  "seams": [
+    {
+      "id": "pregunta→beneficios",
+      "cut": 2.9,
+      "type": "morph",
+      "technique": "cut-the-curve LEFT del titular + traspaso de la nube (morph)",
+      "exit": {
+        "selector": "#titular",
+        "axis": "x",
+        "dir": -1
+      },
+      "entry": {
+        "selector": "#nube-b",
+        "axis": "x",
+        "dir": -1
+      },
+      "carrier": {
+        "out": "#nube-a",
+        "in": "#nube-b"
+      }
+    }
+  ]
+}
