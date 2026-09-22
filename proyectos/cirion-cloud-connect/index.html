@@ -3,9 +3,17 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=1920, height=1080" />
-    <!-- GSAP local: el CDN público está bloqueado en este entorno y evita fetches en render. -->
+    <!-- GSAP local (3.15): el CDN público está bloqueado en este entorno y así el render no depende de la red. -->
     <script src="assets/vendor/gsap.min.js"></script>
+    <script src="assets/vendor/MorphSVGPlugin.min.js"></script>
     <style>
+      /*
+        Diagramación áurea (φ ≈ 1,618), lienzo 1920×1080:
+        - Columnas: foto en 0–0,382·W (733 px); texto desde 733 + H/φ⁵ (97 px) = 830 px.
+        - Horizontales: 0,382·H = 412 px (línea de los ojos y tope del titular) y 0,618·H = 668 px (base del titular).
+        - Esquema: diámetro del anillo / ancho de la nube = φ (660 / 408).
+        - Escala tipográfica en pasos de √φ: 93 · 73 · 57 · 45 · 36 · 28 · 22 px.
+      */
       :root {
         --negro: #000000;
         --blanco: #ffffff;
@@ -15,6 +23,11 @@
         --gris: #54565a;
         --gris-texto: #8e9096;
         --fuente: "Maven Pro", sans-serif;
+        --t-93: 93px;
+        --t-45: 45px;
+        --t-36: 36px;
+        --t-28: 28px;
+        --t-22: 22px;
       }
       * {
         margin: 0;
@@ -42,16 +55,34 @@
         position: absolute;
         inset: 0;
       }
-      .acento {
-        color: var(--magenta);
+
+      /* Vapor: nubes muy difuminadas */
+      .vapor {
+        position: absolute;
+        width: 1100px;
+        height: 700px;
+        opacity: 0;
+        will-change: transform, opacity;
       }
 
-      /* Escena 1 — pregunta */
+      /* Escena 1 */
+      #foto {
+        position: absolute;
+        left: 30px;
+        top: 216px;
+        width: 744px;
+        transform-origin: 40% 30%;
+      }
+      #foto img {
+        display: block;
+        width: 744px;
+        height: auto;
+      }
       #titular {
         position: absolute;
-        left: 200px;
-        top: 352px;
-        font-size: 92px;
+        left: 830px;
+        top: 390px;
+        font-size: var(--t-93);
         font-weight: 700;
         line-height: 1.08;
         letter-spacing: -0.01em;
@@ -60,34 +91,32 @@
         display: block;
       }
 
-      /* Nube compartida (elemento de continuidad entre escenas) */
+      /* Escena 2 */
       #nube-texto {
         position: absolute;
         left: 760px;
-        top: 432px;
+        top: 438px;
         width: 400px;
         text-align: center;
-        font-size: 44px;
+        font-size: var(--t-45);
         font-weight: 500;
         line-height: 1.12;
         letter-spacing: 0.08em;
       }
-
-      /* Escena 2 — beneficios */
       .etiqueta {
         position: absolute;
-        width: 380px;
+        width: 400px;
       }
       .etiqueta h3 {
-        font-size: 32px;
+        font-size: var(--t-36);
         font-weight: 600;
         letter-spacing: 0.03em;
-        margin-bottom: 8px;
+        margin-bottom: 6px;
       }
       .etiqueta p {
-        font-size: 27px;
+        font-size: var(--t-28);
         font-weight: 400;
-        line-height: 1.32;
+        line-height: 1.3;
         letter-spacing: 0.02em;
       }
       .etiqueta.magenta h3 {
@@ -101,24 +130,24 @@
       }
       #et-seguridad {
         left: 1124px;
-        top: 118px;
+        top: 104px;
       }
       #et-flexibilidad {
         left: 1380px;
-        top: 464px;
-        width: 360px;
+        top: 452px;
+        width: 380px;
       }
       #et-disponibilidad {
         left: 1110px;
-        top: 832px;
+        top: 818px;
       }
       #et-performance {
-        left: 160px;
-        top: 476px;
+        left: 140px;
+        top: 468px;
       }
       .proveedor {
         position: absolute;
-        font-size: 22px;
+        font-size: var(--t-22);
         font-weight: 500;
         letter-spacing: 0.04em;
         color: var(--gris-texto);
@@ -128,12 +157,12 @@
         position: absolute;
         left: 0;
         right: 0;
-        top: 1000px;
+        top: 1004px;
         display: flex;
         align-items: center;
         justify-content: center;
         gap: 28px;
-        font-size: 24px;
+        font-size: var(--t-22);
         letter-spacing: 0.03em;
         color: var(--gris-texto);
       }
@@ -167,15 +196,116 @@
       data-height="1080"
       data-fps="30"
     >
-      <!-- ESCENA 1 · 0,0–2,9 s · Pregunta de apertura (texto literal de la lámina) -->
+      <!-- VAPOR · 0–8 s · capa de fondo (texturas generadas con scripts/generar-vapor.py) -->
       <div
-        data-hf-id="hf-24x4"
+        data-hf-id="hf-xhql"
+        id="vapor"
+        class="escena clip"
+        data-start="0"
+        data-duration="8"
+        data-track-index="0"
+      >
+        <img
+          data-hf-id="hf-pscv"
+          id="v1"
+          class="vapor"
+          src="assets/img/vapor-1.webp"
+          alt=""
+          style="left: 1020px; top: -60px"
+        />
+        <img
+          data-hf-id="hf-3szv"
+          id="v2"
+          class="vapor"
+          src="assets/img/vapor-2.webp"
+          alt=""
+          style="left: 1080px; top: 520px"
+        />
+        <img
+          data-hf-id="hf-jbqi"
+          id="v3"
+          class="vapor"
+          src="assets/img/vapor-3.webp"
+          alt=""
+          style="left: -380px; top: 560px"
+        />
+        <img
+          data-hf-id="hf-v7e8"
+          id="v4"
+          class="vapor"
+          src="assets/img/vapor-1.webp"
+          alt=""
+          style="left: -150px; top: 120px"
+        />
+        <img
+          data-hf-id="hf-mjvj"
+          id="v5"
+          class="vapor"
+          src="assets/img/vapor-2.webp"
+          alt=""
+          style="left: 410px; top: 190px"
+        />
+        <img
+          data-hf-id="hf-b7md"
+          id="v6"
+          class="vapor"
+          src="assets/img/vapor-3.webp"
+          alt=""
+          style="left: 700px; top: 260px"
+        />
+      </div>
+
+      <!-- ESCENA 1 · 0,0–2,9 s · Foto + pregunta de apertura (texto literal de la lámina) -->
+      <div
+        data-hf-id="hf-q0w5"
         id="s1"
         class="escena clip"
         data-start="0"
         data-duration="2.9"
-        data-track-index="0"
+        data-track-index="1"
       >
+        <div data-hf-id="hf-tbun" id="foto">
+          <img
+            data-hf-id="hf-8tbk"
+            id="foto-img"
+            src="assets/img/ejecutivo.webp"
+            alt="Ejecutivo pensativo mirando hacia la derecha"
+          />
+        </div>
+        <!-- Contorno de la foto como vector: se transforma en la nube de Cloud Connect -->
+        <svg
+          data-hf-id="hf-p153"
+          class="capa"
+          width="1920"
+          height="1080"
+          viewBox="0 0 1920 1080"
+          aria-hidden="true"
+        >
+          <defs data-hf-id="hf-mh0t">
+            <linearGradient data-hf-id="hf-9t0j" id="grad-contorno" x1="0" y1="0" x2="1" y2="0">
+              <stop data-hf-id="hf-8w7a" offset="0" stop-color="#EF2AC1" />
+              <stop data-hf-id="hf-n6po" id="grad-contorno-fin" offset="1" stop-color="#EF2AC1" />
+            </linearGradient>
+          </defs>
+          <path
+            data-hf-id="hf-tewo"
+            id="contorno"
+            class="glow-m"
+            d="M408.1 972.6 L387.4 972.6 L374.1 971.2 L340.8 962.3 L314.9 950.5 L284.6 931.2 L248.3 913.5 L171.3 889.0 L155.1 882.4 L136.6 872.0 L108.4 852.0 L80.7 822.8 L67.4 804.3 L60.7 792.5 L54.8 780.6 L46.6 758.4 L40.7 733.3 L37.8 702.2 L39.2 678.5 L44.4 655.6 L50.4 640.0 L62.9 618.6 L71.1 608.2 L97.0 584.5 L97.7 581.6 L74.8 549.0 L61.5 523.1 L52.6 500.9 L43.7 471.3 L38.5 440.2 L37.8 409.9 L39.2 392.1 L44.4 366.2 L51.8 344.8 L62.9 322.6 L76.2 303.3 L95.1 283.0 L109.2 271.1 L132.1 256.3 L155.8 244.5 L178.0 236.3 L212.0 228.2 L243.9 224.5 L280.9 224.5 L311.9 228.2 L338.6 234.1 L371.1 246.0 L403.7 263.0 L427.4 280.0 L445.5 296.7 L464.8 319.6 L474.4 333.7 L486.2 355.9 L495.1 378.8 L501.0 401.7 L504.0 421.0 L506.2 450.6 L510.3 453.2 L545.0 465.0 L569.5 477.6 L599.8 499.1 L620.9 519.4 L637.9 540.9 L648.3 557.9 L657.9 578.6 L664.5 603.0 L667.1 605.6 L690.1 618.2 L703.4 627.8 L727.5 650.4 L738.5 664.4 L749.6 682.2 L760.0 708.8 L763.0 720.7 L765.2 739.2 L764.5 760.6 L760.0 782.8 L753.4 801.3 L740.0 823.5 L731.9 833.9 L713.8 851.3 L694.5 865.4 L670.8 877.9 L656.8 883.9 L632.4 891.2 L614.6 895.0 L584.3 897.9 L556.1 896.4 L537.6 893.5 L531.3 899.0 L527.6 907.2 L515.8 922.7 L502.9 935.6 L488.1 946.8 L469.6 957.1 L445.9 966.0 L426.6 970.4 Z"
+            fill="none"
+            stroke="url(#grad-contorno)"
+            stroke-width="6"
+            stroke-linejoin="round"
+            opacity="0"
+          />
+          <path
+            data-hf-id="hf-bj3q"
+            id="nube-destino"
+            d="M815.0 594.4 C760.6 594.4 742.5 540.0 769.6 508.3 C780.5 469.3 824.0 454.8 855.8 467.5 C869.4 404.0 932.8 372.3 987.2 390.4 C1032.5 399.5 1064.2 435.8 1068.8 476.5 C1114.1 463.0 1164.0 494.7 1164.0 540.0 C1164.0 576.3 1136.8 594.4 1105.0 594.4 Z"
+            fill="none"
+            stroke="none"
+          />
+        </svg>
         <h1 data-hf-id="hf-g88k" id="titular">
           <span data-hf-id="hf-292z" class="linea" id="l1">¿Qué ocurre entre</span>
           <span data-hf-id="hf-fwx3" class="linea" id="l2"
@@ -185,55 +315,16 @@
             >la <span data-hf-id="hf-rb4q" id="w-nube">nube</span>?</span
           >
         </h1>
-        <!-- Nube (portador): viaja a la izquierda y se detiene en el centro justo en el corte -->
-        <div data-hf-id="hf-zuw5" id="nube-a" class="capa">
-          <svg
-            data-hf-id="hf-p153"
-            class="capa"
-            width="1920"
-            height="1080"
-            viewBox="0 0 1920 1080"
-            aria-hidden="true"
-          >
-            <defs data-hf-id="hf-mh0t">
-              <linearGradient
-                data-hf-id="hf-bduf"
-                id="grad-nube-a"
-                x1="735"
-                y1="0"
-                x2="1185"
-                y2="0"
-                gradientUnits="userSpaceOnUse"
-              >
-                <stop data-hf-id="hf-8w7a" offset="0" stop-color="#EF2AC1" />
-                <stop data-hf-id="hf-d4a9" offset="1" stop-color="#00A7E1" />
-              </linearGradient>
-            </defs>
-            <path
-              data-hf-id="hf-a2hi"
-              id="nube-trazo"
-              class="glow-m"
-              d="M800 600 C740 600 720 540 750 505 C762 462 810 446 845 460 C860 390 930 355 990 375 C1040 385 1075 425 1080 470 C1130 455 1185 490 1185 540 C1185 580 1155 600 1120 600 Z"
-              fill="none"
-              stroke="url(#grad-nube-a)"
-              stroke-width="4"
-              stroke-linejoin="round"
-              pathLength="1"
-              stroke-dasharray="1"
-              stroke-dashoffset="1"
-            />
-          </svg>
-        </div>
       </div>
 
       <!-- ESCENA 2 · 2,9–8,0 s · Beneficios de Cloud Connect (esquema de la lámina) -->
       <div
-        data-hf-id="hf-dzay"
+        data-hf-id="hf-0kb9"
         id="s2"
         class="escena clip"
         data-start="2.9"
         data-duration="5.1"
-        data-track-index="1"
+        data-track-index="2"
       >
         <svg
           data-hf-id="hf-stnr"
@@ -254,6 +345,10 @@
               gradientUnits="userSpaceOnUse"
             >
               <stop data-hf-id="hf-bk0a" offset="0" stop-color="#EF2AC1" />
+              <stop data-hf-id="hf-d4a9" offset="1" stop-color="#00A7E1" />
+            </linearGradient>
+            <linearGradient data-hf-id="hf-bd7o" id="grad-nube-b" x1="0" y1="0" x2="1" y2="0">
+              <stop data-hf-id="hf-bybb" offset="0" stop-color="#EF2AC1" />
               <stop data-hf-id="hf-ef39" offset="1" stop-color="#00A7E1" />
             </linearGradient>
           </defs>
@@ -275,11 +370,11 @@
 
           <!-- Radios: nube → nodo -->
           <line
-            data-hf-id="hf-a5vb"
+            data-hf-id="hf-mozw"
             id="r-seguridad"
             class="radio"
             x1="960"
-            y1="368"
+            y1="383"
             x2="960"
             y2="268"
             stroke="#EF2AC1"
@@ -289,10 +384,10 @@
             stroke-dashoffset="1"
           />
           <line
-            data-hf-id="hf-zgt0"
+            data-hf-id="hf-1ywb"
             id="r-flexibilidad"
             class="radio"
-            x1="1185"
+            x1="1164"
             y1="540"
             x2="1232"
             y2="540"
@@ -303,11 +398,11 @@
             stroke-dashoffset="1"
           />
           <line
-            data-hf-id="hf-ev3m"
+            data-hf-id="hf-mmea"
             id="r-disponibilidad"
             class="radio"
             x1="960"
-            y1="600"
+            y1="594"
             x2="960"
             y2="812"
             stroke="#00A7E1"
@@ -317,10 +412,10 @@
             stroke-dashoffset="1"
           />
           <line
-            data-hf-id="hf-36dr"
+            data-hf-id="hf-3uos"
             id="r-performance"
             class="radio"
-            x1="735"
+            x1="752"
             y1="540"
             x2="688"
             y2="540"
@@ -333,37 +428,37 @@
 
           <!-- Pulsos en los radios -->
           <circle
-            data-hf-id="hf-tu1q"
+            data-hf-id="hf-nn5m"
             id="p-seguridad"
             class="glow-m"
             cx="960"
-            cy="318"
+            cy="325"
             r="9"
             fill="#EF2AC1"
           />
           <circle
-            data-hf-id="hf-drbq"
+            data-hf-id="hf-o32i"
             id="p-flexibilidad"
             class="glow-a"
-            cx="1208"
+            cx="1198"
             cy="540"
             r="9"
             fill="#00A7E1"
           />
           <circle
-            data-hf-id="hf-hlwq"
+            data-hf-id="hf-ibyh"
             id="p-disponibilidad"
             class="glow-a"
             cx="960"
-            cy="706"
+            cy="703"
             r="9"
             fill="#00A7E1"
           />
           <circle
-            data-hf-id="hf-ud2p"
+            data-hf-id="hf-3021"
             id="p-performance"
             class="glow-m"
-            cx="711"
+            cx="720"
             cy="540"
             r="9"
             fill="#EF2AC1"
@@ -386,10 +481,10 @@
               cy="210"
               r="58"
               fill="#000"
+              class="aro"
               pathLength="1"
               stroke-dasharray="1"
               stroke-dashoffset="1"
-              class="aro"
               transform="rotate(-90 960 210)"
             />
             <g data-hf-id="hf-3syb" class="icono" transform="translate(928 178)">
@@ -417,10 +512,10 @@
               cy="540"
               r="58"
               fill="#000"
+              class="aro"
               pathLength="1"
               stroke-dasharray="1"
               stroke-dashoffset="1"
-              class="aro"
               transform="rotate(-90 1290 540)"
             />
             <g data-hf-id="hf-crp9" class="icono" transform="translate(1258 508)">
@@ -446,10 +541,10 @@
               cy="870"
               r="58"
               fill="#000"
+              class="aro"
               pathLength="1"
               stroke-dasharray="1"
               stroke-dashoffset="1"
-              class="aro"
               transform="rotate(-90 960 870)"
             />
             <g data-hf-id="hf-zlxs" class="icono" transform="translate(928 838)">
@@ -472,64 +567,39 @@
               cy="540"
               r="58"
               fill="#000"
+              class="aro"
               pathLength="1"
               stroke-dasharray="1"
               stroke-dashoffset="1"
-              class="aro"
               transform="rotate(-90 630 540)"
             />
             <g data-hf-id="hf-jqlr" class="icono" transform="translate(598 508)">
               <path data-hf-id="hf-4zam" d="M36 8 L20 35 H31 L28 56 L44 27 H33 Z" />
             </g>
           </g>
+
+          <!-- Nube B: continúa exactamente donde terminó el contorno de la foto -->
+          <path
+            data-hf-id="hf-5qts"
+            id="nube-b-trazo"
+            class="glow-m"
+            d="M815.0 594.4 C760.6 594.4 742.5 540.0 769.6 508.3 C780.5 469.3 824.0 454.8 855.8 467.5 C869.4 404.0 932.8 372.3 987.2 390.4 C1032.5 399.5 1064.2 435.8 1068.8 476.5 C1114.1 463.0 1164.0 494.7 1164.0 540.0 C1164.0 576.3 1136.8 594.4 1105.0 594.4 Z"
+            fill="none"
+            stroke="url(#grad-nube-b)"
+            stroke-width="4"
+            stroke-linejoin="round"
+          />
         </svg>
 
         <!-- Proveedores (nombres, no logotipos) -->
-        <div data-hf-id="hf-5yxq" class="proveedor" style="left: 780px; top: 380px">AWS</div>
-        <div data-hf-id="hf-0r8i" class="proveedor" style="left: 1090px; top: 390px">Azure</div>
-        <div data-hf-id="hf-daov" class="proveedor" style="left: 712px; top: 680px">
+        <div data-hf-id="hf-litn" class="proveedor" style="left: 790px; top: 384px">AWS</div>
+        <div data-hf-id="hf-ikqu" class="proveedor" style="left: 1076px; top: 394px">Azure</div>
+        <div data-hf-id="hf-o80g" class="proveedor" style="left: 716px; top: 676px">
           Google Cloud
         </div>
-        <div data-hf-id="hf-z474" class="proveedor" style="left: 806px; top: 756px">IBM Cloud</div>
-        <div data-hf-id="hf-a1sm" class="proveedor" style="left: 1062px; top: 690px">
+        <div data-hf-id="hf-we90" class="proveedor" style="left: 806px; top: 752px">IBM Cloud</div>
+        <div data-hf-id="hf-bkn8" class="proveedor" style="left: 1058px; top: 686px">
           Oracle Cloud
-        </div>
-
-        <!-- Nube B: continúa exactamente donde terminó la nube A -->
-        <div data-hf-id="hf-3t06" id="nube-b" class="capa">
-          <svg
-            data-hf-id="hf-sfcq"
-            class="capa"
-            width="1920"
-            height="1080"
-            viewBox="0 0 1920 1080"
-            aria-hidden="true"
-          >
-            <defs data-hf-id="hf-ws6g">
-              <linearGradient
-                data-hf-id="hf-2kpm"
-                id="grad-nube-b"
-                x1="735"
-                y1="0"
-                x2="1185"
-                y2="0"
-                gradientUnits="userSpaceOnUse"
-              >
-                <stop data-hf-id="hf-bybb" offset="0" stop-color="#EF2AC1" />
-                <stop data-hf-id="hf-fm0c" offset="1" stop-color="#00A7E1" />
-              </linearGradient>
-            </defs>
-            <path
-              data-hf-id="hf-1nlf"
-              id="nube-b-trazo"
-              class="glow-m"
-              d="M800 600 C740 600 720 540 750 505 C762 462 810 446 845 460 C860 390 930 355 990 375 C1040 385 1075 425 1080 470 C1130 455 1185 490 1185 540 C1185 580 1155 600 1120 600 Z"
-              fill="none"
-              stroke="url(#grad-nube-b)"
-              stroke-width="4"
-              stroke-linejoin="round"
-            />
-          </svg>
         </div>
 
         <div data-hf-id="hf-5kwz" id="nube-texto">CLOUD<br data-hf-id="hf-x5px" />CONNECT</div>
@@ -574,12 +644,35 @@
     </div>
 
     <script>
+      gsap.registerPlugin(MorphSVGPlugin);
       const tl = gsap.timeline({ paused: true });
       const T = { corte: 2.9 };
 
+      // ---- Vapor: cada nube aparece, asciende, se expande y se esfuma ----
+      // [id, inicio, duración, opacidad máxima, deriva x, ascenso y]
+      const vapores = [
+        ["#v1", -1.2, 5.2, 0.26, -60, -70],
+        ["#v2", 0.4, 5.6, 0.2, -80, -60],
+        ["#v3", -0.6, 5.0, 0.24, 70, -80],
+        ["#v4", 1.0, 4.6, 0.18, 60, -60],
+        ["#v5", 2.05, 2.6, 0.34, 40, -90],
+        ["#v6", 3.3, 4.7, 0.13, -50, -50],
+      ];
+      vapores.forEach(([id, t0, dur, pico, dx, dy]) => {
+        gsap.set(id, { opacity: 0, scale: 0.85, x: 0, y: 0, transformOrigin: "50% 60%" });
+        const inicio = Math.max(0, t0);
+        const avance = (inicio - t0) / dur; // las que ya estaban en curso al empezar
+        const vida = gsap.timeline({ paused: true }); // la conduce el tween de abajo
+        vida.to(id, { x: dx, y: dy, scale: 1.3, duration: dur, ease: "sine.inOut" }, 0);
+        vida.to(id, { opacity: pico, duration: dur * 0.4, ease: "sine.out" }, 0);
+        vida.to(id, { opacity: 0, duration: dur * 0.6, ease: "sine.in" }, dur * 0.4);
+        tl.add(vida.tweenFromTo(dur * avance, dur), inicio);
+      });
+
       // ---- Estados iniciales ----
       gsap.set(["#l1", "#l2", "#l3"], { y: 50, opacity: 0 });
-      gsap.set("#nube-a", { x: 480 });
+      gsap.set("#foto-img", { opacity: 0 });
+      gsap.set("#foto", { scale: 1.04, filter: "blur(0px)" });
       gsap.set("#nube-texto", { opacity: 0, y: 14 });
       gsap.set(".icono", { opacity: 0 });
       gsap.set(".nodo", { opacity: 0 });
@@ -593,36 +686,48 @@
       gsap.set("#pie-texto", { opacity: 0 });
       gsap.set("#pie .raya", { scaleX: 0 });
 
-      // ---- Escena 1: pregunta ----
+      // ---- Escena 1: foto y pregunta ----
+      tl.to("#foto-img", { opacity: 1, duration: 0.8, ease: "sine.out" }, 0);
+      tl.to("#foto", { scale: 1, duration: 2.2, ease: "power2.out" }, 0);
       tl.to(
         ["#l1", "#l2", "#l3"],
         { y: 0, opacity: 1, duration: 0.5, ease: "power3.out", stagger: 0.12 },
-        0.1,
+        0.25,
       );
-      // Los acentos se activan cuando aparece la nube: la relación usuarios ↔ nube
       tl.fromTo(
         "#w-usuarios",
         { color: "#ffffff" },
         { color: "#EF2AC1", duration: 0.4, ease: "power2.out" },
         1.0,
       );
-      tl.to(
-        "#nube-trazo",
-        { attr: { "stroke-dashoffset": 0 }, duration: 0.9, ease: "power2.inOut" },
-        1.25,
-      );
       tl.fromTo(
         "#w-nube",
         { color: "#ffffff" },
         { color: "#EF2AC1", duration: 0.4, ease: "power2.out" },
-        1.25,
+        1.3,
       );
 
-      // ---- Corte (cut-the-curve hacia la izquierda) ----
-      tl.to("#titular", { x: -230, duration: 0.34, ease: "power4.in" }, T.corte - 0.5);
-      tl.to("#titular", { opacity: 0, duration: 0.22, ease: "power1.in" }, T.corte - 0.4);
-      // La nube viaja en la misma dirección y llega al centro en el corte
-      tl.to("#nube-a", { x: 0, duration: 0.45, ease: "power2.inOut" }, T.corte - 0.45);
+      // ---- Transición: la foto se esfuma como vapor y su contorno se vuelve la nube ----
+      tl.to("#titular", { x: 230, duration: 0.34, ease: "power4.in" }, 2.2);
+      tl.to("#titular", { opacity: 0, duration: 0.22, ease: "power1.in" }, 2.3);
+      tl.set("#contorno", { opacity: 1 }, 2.2);
+      tl.to("#foto", { filter: "blur(16px)", scale: 1.03, duration: 0.5, ease: "power1.in" }, 2.2);
+      tl.to("#foto-img", { opacity: 0, duration: 0.45, ease: "sine.in" }, 2.25);
+      tl.to(
+        "#contorno",
+        { morphSVG: "#nube-destino", duration: 0.6, ease: "power2.inOut" },
+        T.corte - 0.6,
+      );
+      tl.to(
+        "#contorno",
+        { attr: { "stroke-width": 4 }, duration: 0.6, ease: "power2.inOut" },
+        T.corte - 0.6,
+      );
+      tl.to(
+        "#grad-contorno-fin",
+        { attr: { "stop-color": "#00A7E1" }, duration: 0.6, ease: "power2.inOut" },
+        T.corte - 0.6,
+      );
 
       // ---- Escena 2: esquema de beneficios ----
       tl.to("#nube-texto", { opacity: 1, y: 0, duration: 0.4, ease: "power3.out" }, 3.0);

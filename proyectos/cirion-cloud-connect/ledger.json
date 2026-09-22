@@ -5,20 +5,20 @@
       "id": "pregunta→beneficios",
       "cut": 2.9,
       "type": "morph",
-      "technique": "cut-the-curve LEFT del titular + traspaso de la nube (morph)",
+      "technique": "cut-the-curve RIGHT del titular + la foto se esfuma y su contorno se transforma en la nube (morph)",
       "exit": {
         "selector": "#titular",
         "axis": "x",
-        "dir": -1
+        "dir": 1
       },
       "entry": {
-        "selector": "#nube-b",
+        "selector": "#nube-b-trazo",
         "axis": "x",
-        "dir": -1
+        "dir": 1
       },
       "carrier": {
-        "out": "#nube-a",
-        "in": "#nube-b"
+        "out": "#contorno",
+        "in": "#nube-b-trazo"
       }
     }
   ]
