@@ -1,5 +1,8 @@
 <!doctype html>
-<html lang="es">
+<html
+  lang="es"
+  data-composition-variables='[{"id":"idioma","type":"enum","label":"Idioma","default":"es","options":[{"value":"es","label":"Español"},{"value":"en","label":"English"},{"value":"pt","label":"Português"}]}]'
+>
   <head>
     <meta charset="UTF-8" />
     <!-- Escena 1 del guion (00–04 s): ¿Qué ocurre entre tus usuarios y la nube? -->
@@ -77,14 +80,7 @@
             aria-hidden="true"
           >
             <defs>
-              <linearGradient
-                id="p-grad-filamento"
-                x1="996"
-                y1="0"
-                x2="1520"
-                y2="0"
-                gradientUnits="userSpaceOnUse"
-              >
+              <linearGradient id="p-grad-filamento" x1="0" y1="0" x2="1" y2="0">
                 <stop offset="0" stop-color="#EF2AC1" />
                 <stop offset="1" stop-color="#00A7E1" />
               </linearGradient>
@@ -121,6 +117,50 @@
 
       <script>
         (() => {
+          // Idioma: override de render (--variables '{"idioma":"en"}') o, si no hay, el valor por defecto de la escena.
+          const idioma =
+            (window.__hfVariables && window.__hfVariables.idioma) ||
+            window.__hyperframes.getVariables().idioma ||
+            "es";
+          // Textos por idioma. El filamento se midió sobre Maven Pro 93 px para cada versión:
+          // va bajo la palabra «usuarios», rodea el final de la línea y termina bajo «nube».
+          const TEXTOS = {
+            es: {
+              lineas: [
+                "¿Qué ocurre entre",
+                'tus <span id="p-usuarios">usuarios</span> y',
+                'la <span id="p-nube">nube</span>?',
+              ],
+              filamento: "M996 592 H1356 C1520 592 1520 690 1356 690 H937",
+              alt: "Ejecutivo pensativo mirando hacia la derecha",
+            },
+            en: {
+              lineas: [
+                "What happens",
+                'between your <span id="p-usuarios">users</span>',
+                'and the <span id="p-nube">cloud</span>?',
+              ],
+              filamento: "M1459 592 H1681 C1790 592 1790 690 1681 690 H1194",
+              alt: "Thoughtful executive looking to the right",
+            },
+            pt: {
+              lineas: [
+                "O que acontece entre",
+                'seus <span id="p-usuarios">usuários</span> e',
+                'a <span id="p-nube">nuvem</span>?',
+              ],
+              filamento: "M1054 592 H1414 C1578 592 1578 690 1414 690 H912",
+              alt: "Executivo pensativo olhando para a direita",
+            },
+          };
+          const t = TEXTOS[idioma] || TEXTOS.es;
+          ["#p-l1", "#p-l2", "#p-l3"].forEach((sel, i) => {
+            document.querySelector(sel).innerHTML = t.lineas[i];
+          });
+          document.querySelector("#p-filamento").setAttribute("d", t.filamento);
+          document.querySelector("#p-chispa").setAttribute("d", t.filamento);
+          document.querySelector("#p-foto-img").setAttribute("alt", t.alt);
+
           const tl = gsap.timeline({ paused: true });
           // Tiempos en la grilla de 120 BPM (scripts/generar-audio.py): «usuarios» en 1,0 s; «nube» en 2,0 s.
           gsap.set(["#p-l1", "#p-l2", "#p-l3"], { y: 50, opacity: 0 });

@@ -1,5 +1,8 @@
 <!doctype html>
-<html lang="es">
+<html
+  lang="es"
+  data-composition-variables='[{"id":"idioma","type":"enum","label":"Idioma","default":"es","options":[{"value":"es","label":"Español"},{"value":"en","label":"English"},{"value":"pt","label":"Português"}]}]'
+>
   <head>
     <meta charset="UTF-8" />
     <!-- Escena 5 del guion (24–30 s): Cloud Connect la acerca a tu red. El logo oficial llega con out.mp4. -->
@@ -54,7 +57,7 @@
           text-align: center;
           font-size: 73px;
           font-weight: 700;
-          line-height: 1;
+          line-height: 1.1;
           color: #ef2ac1;
         }
         #k-bajada {
@@ -85,6 +88,34 @@
 
       <script>
         (() => {
+          // Idioma: override de render (--variables '{"idioma":"en"}') o, si no hay, el valor por defecto de la escena.
+          const idioma =
+            (window.__hfVariables && window.__hfVariables.idioma) ||
+            window.__hyperframes.getVariables().idioma ||
+            "es";
+          // En inglés la frase no entra en una línea a 73 px (1912 px): se divide en dos y la bajada baja 80 px.
+          const TEXTOS = {
+            es: {
+              frase: "Cloud Connect la acerca a tu red.",
+              bajada: "Conectividad privada para tus aplicaciones.",
+              bajadaTop: 206,
+            },
+            en: {
+              frase: "Cloud Connect brings the cloud<br />closer to your network.",
+              bajada: "Private connectivity for your applications.",
+              bajadaTop: 286,
+            },
+            pt: {
+              frase: "O Cloud Connect aproxima a nuvem da sua rede.",
+              bajada: "Conectividade privada para suas aplicações.",
+              bajadaTop: 206,
+            },
+          };
+          const t = TEXTOS[idioma] || TEXTOS.es;
+          document.querySelector("#k-frase").innerHTML = t.frase;
+          document.querySelector("#k-bajada").textContent = t.bajada;
+          document.querySelector("#k-bajada").style.top = t.bajadaTop + "px";
+
           const tl = gsap.timeline({ paused: true });
           gsap.set("#k-bajada", { opacity: 0, y: 16 });
 

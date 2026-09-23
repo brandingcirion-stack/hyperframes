@@ -1,5 +1,8 @@
 <!doctype html>
-<html lang="es">
+<html
+  lang="es"
+  data-composition-variables='[{"id":"idioma","type":"enum","label":"Idioma","default":"es","options":[{"value":"es","label":"Español"},{"value":"en","label":"English"},{"value":"pt","label":"Português"}]}]'
+>
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=1920, height=1080" />
@@ -47,6 +50,8 @@
   <body>
     <!--
       Cirion · Cloud Connect — 36 s: intro (3 s) + guion de 30 s + out (3 s).
+      Idioma por variable: español por defecto; inglés y portugués con
+      render --variables '{"idioma":"en"}' o '{"idioma":"pt"}'. Los textos viven en cada escena.
       Escenas del guion (tiempos globales): pregunta 3–7 · dato 7–12 · conexión 12–18 · beneficios 18–27 · cierre 27–33.
     -->
     <div

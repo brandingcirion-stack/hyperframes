@@ -1,8 +1,9 @@
 # Cirion · Cloud Connect — guion y estado
 
 - **Fuente:** `Cirion-Info-Cloud-Connect-Externo-ESP.pdf` (lámina vertical única, Illustrator, Maven Pro).
-- **Pieza:** 36 s = intro (3 s) + guion (30 s) + out (3 s). Horizontal 1920×1080, 30 fps, español. Sin locución; música synth tech y efectos sincronizados.
-- **Entrega actual:** v04 — video completo en borrador (`renders/cirion-cloud-connect_es_1920x1080_completo_v04.mp4`).
+- **Pieza:** 36 s = intro (3 s) + guion (30 s) + out (3 s). Horizontal 1920×1080, 30 fps. Sin locución; música synth tech y efectos sincronizados.
+- **Idiomas:** español, inglés y portugués (Brasil), con la misma animación, tiempos y banda sonora.
+- **Entrega actual:** v05 — `renders/cirion-cloud-connect_{es,en,pt}_1920x1080_completo_v05.mp4`.
 - **Aprobado:** ritmo de v01–v02 y encendido horario de los beneficios (v03).
 
 ## Guion aprobado (texto exacto en pantalla)
@@ -14,6 +15,20 @@
 | 09–15 s | Cloud Connect / Conexión privada entre tu red y los principales proveedores cloud.                                                                                                          | Dibujar la conexión desde «Tu red», a través de Cloud Connect, hacia los proveedores. Activar los destinos con pulsos.       |
 | 15–24 s | Beneficios para tu negocio / Seguridad: tráfico privado. / Performance: menor variabilidad. / Flexibilidad: múltiples proveedores cloud. / Disponibilidad: redundancia y SLA empresariales. | Los cuatro beneficios alrededor de la nube desde el inicio. Iluminar cada icono en secuencia, con todos los textos visibles. |
 | 24–30 s | Cloud Connect la acerca a tu red. / Conectividad privada para tus aplicaciones.                                                                                                             | Revelar la ciudad y sus conexiones. Integrar el logo oficial. Cierre completo estable durante los últimos 4 s.               |
+
+## Versiones EN y PT (adaptadas, no literales)
+
+| Escena     | EN                                                                                                                                                                                 | PT (Brasil)                                                                                                                                                                                         |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Pregunta   | What happens / between your **users** / and the **cloud**?                                                                                                                         | O que acontece entre / seus **usuários** e / a **nuvem**?                                                                                                                                           |
+| Dato       | 90% / of organizations will adopt hybrid cloud strategies by 2027.\* / \*Source: Gartner.                                                                                          | 90% / das organizações adotarão estratégias de nuvem híbrida até 2027.\* / \*Fonte: Gartner.                                                                                                        |
+| Conexión   | Cloud Connect / Private connection between your network and the leading cloud providers. · Your network                                                                            | Cloud Connect / Conexão privada entre sua rede e os principais provedores de nuvem. · Sua rede                                                                                                      |
+| Beneficios | Benefits for your business / Security: private traffic. / Performance: lower variability. / Flexibility: multiple cloud providers. / Availability: redundancy and enterprise SLAs. | Benefícios para o seu negócio / Segurança: tráfego privado. / Performance: menor variabilidade. / Flexibilidade: múltiplos provedores de nuvem. / Disponibilidade: redundância e SLAs empresariais. |
+| Cierre     | Cloud Connect brings the cloud / closer to your network. / Private connectivity for your applications.                                                                             | O Cloud Connect aproxima a nuvem da sua rede. / Conectividade privada para suas aplicações.                                                                                                         |
+
+Diagramación por idioma: en inglés el titular de apertura se reparte en otras líneas (el original llegaba a 1862 px) y la frase de cierre va en dos líneas (1912 px en una); el filamento se trazó sobre las palabras medidas de cada idioma. «Performance» se mantiene en los tres idiomas, como en la versión aprobada.
+
+**Cómo se elige el idioma:** cada escena guarda sus textos en los tres idiomas y lee la variable `idioma` (declarada en `index.html`, por defecto `es`).
 
 ## Montaje v04 (tiempos globales)
 
@@ -45,10 +60,11 @@ Fondo de vapor (`compositions/vapor.html`) de 3 a 29 s; se disipa antes del cier
 ## Decisiones y pendientes
 
 - **Logo oficial:** llega con `out.mp4` inmediatamente después del cierre; no se recrea ni se duplica dentro de la escena 24–30 s.
-- **Gartner (90 %):** completar informe, fecha y URL antes de publicar.
+- **Gartner (90 %):** completar informe, fecha y URL antes de publicar (aplica a las tres versiones).
+- **Revisión nativa:** conviene que un hablante nativo de EN y de PT-BR valide las adaptaciones antes de publicar.
 - **Foto del ejecutivo:** extraída del PDF (1024×1536); conviene el original en alta y confirmar derechos de uso. Sin animación de boca (el guion no la pide).
 - **Proveedores cloud** (escena 09–15 s): nombres en texto, no logotipos de terceros, salvo que se entreguen los aprobados. «Tu red» y los proveedores son rótulos de la animación, tomados de la lámina.
-- **Estructura:** `index.html` anfitrión + sub-composiciones en `compositions/`. `lint` avisa que `beneficios.html` es extenso (394 líneas); no afecta el render.
+- **Estructura:** `index.html` anfitrión + sub-composiciones en `compositions/`. `lint` avisa que `beneficios.html` y `conexion.html` son extensos (más de 400 líneas con los textos de tres idiomas); no afecta el render.
 
 ## Activos
 
@@ -65,7 +81,9 @@ Fondo de vapor (`compositions/vapor.html`) de 3 a 29 s; se disipa antes del cier
 node ../../packages/cli/bin/hyperframes.mjs lint
 node ../../packages/cli/bin/hyperframes.mjs check
 python scripts/generar-audio.py
-node ../../packages/cli/bin/hyperframes.mjs render --output renders/cirion-cloud-connect_es_1920x1080_completo_v04.mp4 --fps 30 --quality delivery
+node ../../packages/cli/bin/hyperframes.mjs render --output renders/cirion-cloud-connect_es_1920x1080_completo_v05.mp4 --fps 30 --quality delivery --strict-variables --variables '{"idioma":"es"}'
+node ../../packages/cli/bin/hyperframes.mjs render --output renders/cirion-cloud-connect_en_1920x1080_completo_v05.mp4 --fps 30 --quality delivery --strict-variables --variables '{"idioma":"en"}'
+node ../../packages/cli/bin/hyperframes.mjs render --output renders/cirion-cloud-connect_pt_1920x1080_completo_v05.mp4 --fps 30 --quality delivery --strict-variables --variables '{"idioma":"pt"}'
 # Verificador de costuras (como root requiere un Chrome con --no-sandbox en CHROME_PATH)
 node ../../.claude/skills/motion-doctrine/scripts/seam-gate.mjs verify --ledger ledger.json --project .
 ```

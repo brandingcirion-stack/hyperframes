@@ -1,5 +1,8 @@
 <!doctype html>
-<html lang="es">
+<html
+  lang="es"
+  data-composition-variables='[{"id":"idioma","type":"enum","label":"Idioma","default":"es","options":[{"value":"es","label":"Español"},{"value":"en","label":"English"},{"value":"pt","label":"Português"}]}]'
+>
   <head>
     <meta charset="UTF-8" />
     <!-- Escena 3 del guion (09–15 s): Cloud Connect · conexión privada desde «Tu red» hacia los proveedores. -->
@@ -423,6 +426,29 @@
 
       <script>
         (() => {
+          // Idioma: override de render (--variables '{"idioma":"en"}') o, si no hay, el valor por defecto de la escena.
+          const idioma =
+            (window.__hfVariables && window.__hfVariables.idioma) ||
+            window.__hyperframes.getVariables().idioma ||
+            "es";
+          const TEXTOS = {
+            es: {
+              sub: "Conexión privada entre tu red y los principales proveedores cloud.",
+              red: "Tu red",
+            },
+            en: {
+              sub: "Private connection between your network and the leading cloud providers.",
+              red: "Your network",
+            },
+            pt: {
+              sub: "Conexão privada entre sua rede e os principais provedores de nuvem.",
+              red: "Sua rede",
+            },
+          };
+          const t = TEXTOS[idioma] || TEXTOS.es;
+          document.querySelector("#c-sub").textContent = t.sub;
+          document.querySelector("#c-red-texto").textContent = t.red;
+
           const tl = gsap.timeline({ paused: true });
           // Tiempos en la grilla de 120 BPM (scripts/generar-audio.py):
           // enlace Tu red → nube 0,9–1,5 s; destinos en 2,0 / 2,25 / 2,5 / 2,75 / 3,0 s.

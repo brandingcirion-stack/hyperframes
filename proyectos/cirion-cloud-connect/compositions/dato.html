@@ -1,5 +1,8 @@
 <!doctype html>
-<html lang="es">
+<html
+  lang="es"
+  data-composition-variables='[{"id":"idioma","type":"enum","label":"Idioma","default":"es","options":[{"value":"es","label":"Español"},{"value":"en","label":"English"},{"value":"pt","label":"Português"}]}]'
+>
   <head>
     <meta charset="UTF-8" />
     <!-- Escena 2 del guion (04–09 s): 90 % · Gartner. Referencia completa pendiente antes de publicar. -->
@@ -95,6 +98,33 @@
 
       <script>
         (() => {
+          // Idioma: override de render (--variables '{"idioma":"en"}') o, si no hay, el valor por defecto de la escena.
+          const idioma =
+            (window.__hfVariables && window.__hfVariables.idioma) ||
+            window.__hyperframes.getVariables().idioma ||
+            "es";
+          const TEXTOS = {
+            es: {
+              texto: "de las organizaciones adoptará estrategias de nube híbrida hasta 2027.*",
+              fuente: "*Fuente: Gartner.",
+              alt: "Globo terráqueo con conexiones de red",
+            },
+            en: {
+              texto: "of organizations will adopt hybrid cloud strategies by 2027.*",
+              fuente: "*Source: Gartner.",
+              alt: "Globe with network connections",
+            },
+            pt: {
+              texto: "das organizações adotarão estratégias de nuvem híbrida até 2027.*",
+              fuente: "*Fonte: Gartner.",
+              alt: "Globo terrestre com conexões de rede",
+            },
+          };
+          const t = TEXTOS[idioma] || TEXTOS.es;
+          document.querySelector("#d-texto").textContent = t.texto;
+          document.querySelector("#d-fuente").textContent = t.fuente;
+          document.querySelector("#d-globo").setAttribute("alt", t.alt);
+
           const tl = gsap.timeline({ paused: true });
           gsap.set("#d-cifra", { clipPath: "inset(100% 0% 0% 0%)" });
           gsap.set(["#d-texto", "#d-fuente"], { opacity: 0, y: 16 });
