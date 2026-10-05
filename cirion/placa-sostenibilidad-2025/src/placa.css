@@ -1,0 +1,220 @@
+:root {
+  --black: #000000;
+  --magenta: #ef2ac1;
+  --cyan: #00a7e1;
+  --deep: #001f60;
+  --text: #f4f5f8;
+  --text-soft: #d9dce4;
+  --pad: 84px;
+}
+body {
+  margin: 0;
+  background: var(--black);
+  color: var(--text);
+  font-family: "Maven Pro", sans-serif;
+}
+#root {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--black);
+}
+.layer {
+  position: absolute;
+  inset: 0;
+}
+
+/* ---------- Fondo ---------- */
+#bg-wrap {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+#bg-reveal {
+  --reveal: -8%;
+  position: absolute;
+  inset: 0;
+  -webkit-mask-image: linear-gradient(
+    90deg,
+    #000 var(--reveal),
+    transparent calc(var(--reveal) + 30%)
+  );
+  mask-image: linear-gradient(90deg, #000 var(--reveal), transparent calc(var(--reveal) + 30%));
+}
+#bg-img {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1080px;
+  height: 1080px;
+  display: block;
+  object-fit: cover;
+}
+#bg-dim {
+  position: absolute;
+  inset: 0;
+  background: var(--black);
+  opacity: 0;
+}
+#bg-foot {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0) 52%,
+    rgba(0, 0, 0, 0.82) 70%,
+    rgba(0, 0, 0, 0.95) 100%
+  );
+  opacity: 0;
+}
+
+/* ---------- Intro (video de marca, recortado 1:1) ---------- */
+#intro {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1080px;
+  height: 1080px;
+  object-fit: cover;
+  z-index: 10;
+}
+
+/* ---------- Logo ---------- */
+#logo {
+  position: absolute;
+  left: var(--pad);
+  top: 66px;
+  width: 180px;
+  height: auto;
+  display: block;
+}
+
+/* ---------- Cabecera ---------- */
+#header {
+  position: absolute;
+  left: var(--pad);
+  right: var(--pad);
+  top: 168px;
+}
+#title {
+  margin: 0;
+  font-size: 66px;
+  line-height: 1.08;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  color: var(--text);
+}
+#title .w,
+#body .w {
+  display: inline-block;
+}
+#subtitle {
+  margin: 22px 0 0;
+  font-size: 40px;
+  line-height: 1.15;
+  font-weight: 700;
+  color: var(--magenta);
+}
+
+/* ---------- Red + cifras ---------- */
+#net-line {
+  position: absolute;
+  left: 0;
+  top: 450px;
+  width: 1080px;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    rgba(0, 167, 225, 0) 0%,
+    rgba(0, 167, 225, 0.9) 12%,
+    rgba(0, 167, 225, 0.9) 70%,
+    rgba(239, 42, 193, 0.9) 92%,
+    rgba(239, 42, 193, 0) 100%
+  );
+  transform-origin: 0 50%;
+}
+#pulse {
+  position: absolute;
+  left: 0;
+  top: 441px;
+  opacity: 0;
+  width: 20px;
+  height: 20px;
+  margin-left: -10px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow:
+    0 0 10px 3px rgba(0, 167, 225, 0.9),
+    0 0 26px 8px rgba(239, 42, 193, 0.45);
+}
+#stats {
+  position: absolute;
+  left: var(--pad);
+  right: var(--pad);
+  top: 450px;
+  height: 236px;
+  display: flex;
+  gap: 24px;
+}
+.card {
+  position: relative;
+  flex: 1 1 0;
+  height: 236px;
+  border-radius: 16px;
+  background: rgba(3, 6, 14, 0.82);
+  border: 1.5px solid rgba(0, 167, 225, 0.55);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0 18px;
+  box-sizing: border-box;
+  text-align: center;
+}
+.card-glow {
+  position: absolute;
+  inset: -1.5px;
+  border-radius: 16px;
+  border: 2px solid var(--magenta);
+  box-shadow: 0 0 22px rgba(239, 42, 193, 0.35);
+  opacity: 0;
+}
+.node {
+  position: absolute;
+  left: 50%;
+  top: -7px;
+  width: 14px;
+  height: 14px;
+  margin-left: -7px;
+  border-radius: 50%;
+  background: var(--cyan);
+  box-shadow: 0 0 12px 3px rgba(0, 167, 225, 0.8);
+}
+.num {
+  font-size: 92px;
+  line-height: 1;
+  font-weight: 700;
+  color: var(--magenta);
+  font-variant-numeric: tabular-nums;
+}
+.label {
+  margin-top: 16px;
+  font-size: 25px;
+  line-height: 1.25;
+  font-weight: 500;
+  color: var(--text-soft);
+}
+
+/* ---------- Cierre ---------- */
+#body {
+  position: absolute;
+  left: var(--pad);
+  right: var(--pad);
+  top: 774px;
+  margin: 0;
+  font-size: 33px;
+  line-height: 1.42;
+  font-weight: 400;
+  color: var(--text-soft);
+}

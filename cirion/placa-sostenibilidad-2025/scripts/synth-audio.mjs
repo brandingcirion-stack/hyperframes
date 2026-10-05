@@ -1,11 +1,12 @@
-// Banda sonora original de la placa (15 s, 120 BPM, Re menor).
+// Banda sonora original: sting de la intro (0–3 s) + placa (3–18 s, 120 BPM, Re menor).
 // Síntesis determinista: no usa muestras ni pistas de terceros.
 // Uso: node scripts/synth-audio.mjs  → assets/audio/placa-bed.raw.wav
 // Luego normalizar con ffmpeg (ver README.md).
 import { writeFileSync } from "node:fs";
 
 const SR = 48000;
-const DUR = 15;
+const INTRO = 3; // duración de la intro en video
+const DUR = INTRO + 15;
 const N = SR * DUR;
 const L = new Float32Array(N);
 const R = new Float32Array(N);
@@ -22,13 +23,18 @@ const rnd = () => {
   return seed / 4294967296 - 0.5;
 };
 
+// `base` desplaza los eventos: 0 para la intro, INTRO*SR para la placa
+let base = 0;
 function add(i, l, r, send = 0) {
+  i += base;
   if (i < 0 || i >= N) return;
   L[i] += l;
   R[i] += r;
   sendL[i] += l * send;
   sendR[i] += r * send;
 }
+
+base = INTRO * SR;
 
 // ---- Pad: acordes con armónicos y detune L/R para amplitud estéreo ----
 const chords = [
@@ -101,7 +107,7 @@ for (const t0 of kicks) {
     add(s0 + k, v, v, 0.02);
     // sidechain suave sobre el pad
     const d = 1 - 0.28 * Math.exp(-t * 9) * fade;
-    if (s0 + k < N) duck[s0 + k] = Math.min(duck[s0 + k], d);
+    if (base + s0 + k < N) duck[base + s0 + k] = Math.min(duck[base + s0 + k], d);
   }
 }
 for (let i = 0; i < N; i++) {
@@ -191,6 +197,47 @@ function boom(t0, gain) {
 }
 boom(4.5, 0.32);
 boom(10.0, 0.3);
+
+// ---- Sting de la intro (tiempos absolutos, sincronizados con intro.mp4) ----
+base = 0;
+// 0–0,6 s: el punto de luz se carga (tono que sube + aire)
+for (let k = 0; k < SR * 0.62; k++) {
+  const t = k / SR;
+  const p = t / 0.62;
+  const f = hz(74) * (1 + 0.5 * p * p);
+  const v = Math.sin(TAU * f * t) * p ** 2 * 0.05;
+  add(k, v, v, 0.5);
+}
+noiseSweep(0, 0.7, 0.3, 0.5, 0.5, 200, 3500);
+// 0,4–1,3 s: las ondas se abren hacia los lados
+noiseSweep(0.4, 0.9, 0.22, 0.45, 0.05, 2500, 900);
+noiseSweep(0.4, 0.9, 0.22, 0.55, 0.95, 2500, 900);
+// 0,6 s: aparece el logo
+boom(0.6, 0.34);
+ping(0.6, 74, 0.35, 0.05);
+ping(0.6, 81, 0.65, 0.045);
+ping(0.62, 86, 0.5, 0.035);
+// 0,6–3,2 s: colchón en Re menor que enlaza con la placa
+for (const [n, pan] of [
+  [50, 0.3],
+  [57, 0.7],
+  [62, 0.5],
+]) {
+  const f = hz(n);
+  for (let k = 0; k < SR * 2.6; k++) {
+    const t = k / SR;
+    const e = env(t, 0.5, 2.6, 0.9) * 0.02;
+    const v = (Math.sin(TAU * f * t) + 0.25 * Math.sin(TAU * f * 2 * t)) * e;
+    add(
+      Math.floor(0.6 * SR) + k,
+      v * Math.cos((pan * Math.PI) / 2),
+      v * Math.sin((pan * Math.PI) / 2),
+      0.5,
+    );
+  }
+}
+// 2,55–3,1 s: destello final de la intro
+noiseSweep(2.55, 0.55, 0.4, 0.5, 0.5, 500, 8000);
 
 // ---- Reverb estéreo (Freeverb simplificado, tiempos distintos por canal) ----
 function reverb(input, combs, allpasses, fb, damp) {

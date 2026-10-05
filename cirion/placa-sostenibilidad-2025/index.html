@@ -30,209 +30,8 @@
         src: url("assets/fonts/maven-pro-latin-700-normal.woff2") format("woff2");
         font-weight: 700;
       }
-      :root {
-        --black: #000000;
-        --magenta: #ef2ac1;
-        --cyan: #00a7e1;
-        --deep: #001f60;
-        --text: #f4f5f8;
-        --text-soft: #d9dce4;
-        --pad: 84px;
-      }
-      body {
-        margin: 0;
-        background: var(--black);
-        color: var(--text);
-        font-family: "Maven Pro", sans-serif;
-      }
-      #root {
-        position: relative;
-        width: 100%;
-        height: 100%;
-        overflow: hidden;
-        background: var(--black);
-      }
-      .layer {
-        position: absolute;
-        inset: 0;
-      }
-
-      /* ---------- Fondo ---------- */
-      #bg-wrap {
-        position: absolute;
-        inset: 0;
-        overflow: hidden;
-      }
-      #bg-reveal {
-        --reveal: -8%;
-        position: absolute;
-        inset: 0;
-        -webkit-mask-image: linear-gradient(
-          90deg,
-          #000 var(--reveal),
-          transparent calc(var(--reveal) + 30%)
-        );
-        mask-image: linear-gradient(
-          90deg,
-          #000 var(--reveal),
-          transparent calc(var(--reveal) + 30%)
-        );
-      }
-      #bg-img {
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 1080px;
-        height: 1080px;
-        display: block;
-        object-fit: cover;
-      }
-      #bg-dim {
-        position: absolute;
-        inset: 0;
-        background: var(--black);
-        opacity: 0;
-      }
-      #bg-foot {
-        position: absolute;
-        inset: 0;
-        background: linear-gradient(
-          180deg,
-          rgba(0, 0, 0, 0) 52%,
-          rgba(0, 0, 0, 0.82) 70%,
-          rgba(0, 0, 0, 0.95) 100%
-        );
-        opacity: 0;
-      }
-
-      /* ---------- Cabecera ---------- */
-      #header {
-        position: absolute;
-        left: var(--pad);
-        right: var(--pad);
-        top: 84px;
-      }
-      #title {
-        margin: 0;
-        font-size: 66px;
-        line-height: 1.08;
-        font-weight: 700;
-        letter-spacing: -0.5px;
-        color: var(--text);
-      }
-      #title .w,
-      #body .w {
-        display: inline-block;
-      }
-      #subtitle {
-        margin: 22px 0 0;
-        font-size: 40px;
-        line-height: 1.15;
-        font-weight: 700;
-        color: var(--magenta);
-      }
-
-      /* ---------- Red + cifras ---------- */
-      #net-line {
-        position: absolute;
-        left: 0;
-        top: 418px;
-        width: 1080px;
-        height: 2px;
-        background: linear-gradient(
-          90deg,
-          rgba(0, 167, 225, 0) 0%,
-          rgba(0, 167, 225, 0.9) 12%,
-          rgba(0, 167, 225, 0.9) 70%,
-          rgba(239, 42, 193, 0.9) 92%,
-          rgba(239, 42, 193, 0) 100%
-        );
-        transform-origin: 0 50%;
-      }
-      #pulse {
-        position: absolute;
-        left: 0;
-        top: 409px;
-        width: 20px;
-        height: 20px;
-        margin-left: -10px;
-        border-radius: 50%;
-        background: #ffffff;
-        box-shadow:
-          0 0 10px 3px rgba(0, 167, 225, 0.9),
-          0 0 26px 8px rgba(239, 42, 193, 0.45);
-      }
-      #stats {
-        position: absolute;
-        left: var(--pad);
-        right: var(--pad);
-        top: 418px;
-        height: 236px;
-        display: flex;
-        gap: 24px;
-      }
-      .card {
-        position: relative;
-        flex: 1 1 0;
-        height: 236px;
-        border-radius: 16px;
-        background: rgba(3, 6, 14, 0.82);
-        border: 1.5px solid rgba(0, 167, 225, 0.55);
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        padding: 0 18px;
-        box-sizing: border-box;
-        text-align: center;
-      }
-      .card-glow {
-        position: absolute;
-        inset: -1.5px;
-        border-radius: 16px;
-        border: 2px solid var(--magenta);
-        box-shadow: 0 0 22px rgba(239, 42, 193, 0.35);
-        opacity: 0;
-      }
-      .node {
-        position: absolute;
-        left: 50%;
-        top: -7px;
-        width: 14px;
-        height: 14px;
-        margin-left: -7px;
-        border-radius: 50%;
-        background: var(--cyan);
-        box-shadow: 0 0 12px 3px rgba(0, 167, 225, 0.8);
-      }
-      .num {
-        font-size: 92px;
-        line-height: 1;
-        font-weight: 700;
-        color: var(--magenta);
-        font-variant-numeric: tabular-nums;
-      }
-      .label {
-        margin-top: 16px;
-        font-size: 25px;
-        line-height: 1.25;
-        font-weight: 500;
-        color: var(--text-soft);
-      }
-
-      /* ---------- Cierre ---------- */
-      #body {
-        position: absolute;
-        left: var(--pad);
-        right: var(--pad);
-        top: 752px;
-        margin: 0;
-        font-size: 33px;
-        line-height: 1.42;
-        font-weight: 400;
-        color: var(--text-soft);
-      }
     </style>
+    <link rel="stylesheet" href="src/placa.css" />
   </head>
   <body>
     <div
@@ -241,7 +40,7 @@
       data-start="0"
       data-width="1080"
       data-height="1080"
-      data-duration="15"
+      data-duration="18"
     >
       <div id="bg-wrap">
         <div id="bg-reveal">
@@ -250,6 +49,8 @@
         <div id="bg-dim"></div>
         <div id="bg-foot"></div>
       </div>
+
+      <img id="logo" src="assets/img/cirion-logo-duo-negativo.svg" alt="Cirion" />
 
       <div id="header">
         <h1 id="title">Infraestructura digital que crece con responsabilidad</h1>
@@ -286,201 +87,30 @@
         promover crecimiento sostenible e innovación.
       </p>
 
+      <video
+        id="intro"
+        class="clip"
+        src="assets/video/intro-1x1.mp4"
+        data-start="0"
+        data-duration="3"
+        data-track-index="5"
+        muted
+        playsinline
+      ></video>
+
       <audio
         id="music-bed"
         src="assets/audio/placa-bed.m4a"
         data-start="0"
-        data-duration="15"
+        data-duration="18"
         data-track-index="10"
         data-volume="1"
       ></audio>
     </div>
 
+    <script src="src/placa.js"></script>
     <script>
-      // ---------- Contenido por idioma (cifras idénticas en los tres) ----------
-      const COPY = {
-        es: {
-          title: "Infraestructura digital que crece con responsabilidad",
-          subtitle: "Informe de Sostenibilidad 2025",
-          labels: [
-            "menos emisiones totales",
-            "energía renovable en DC de 4 países",
-            "data centers",
-          ],
-          body: "Conectamos personas, empresas y oportunidades mediante infraestructura crítica diseñada para promover crecimiento sostenible e innovación.",
-        },
-        en: {
-          title: "Digital infrastructure that grows responsibly",
-          subtitle: "2025 Sustainability Report",
-          labels: [
-            "lower total emissions",
-            "renewable energy in DCs across 4 countries",
-            "data centers",
-          ],
-          body: "We connect people, businesses and opportunities through critical infrastructure designed to drive sustainable growth and innovation.",
-        },
-        pt: {
-          title: "Infraestrutura digital que cresce com responsabilidade",
-          subtitle: "Relatório de Sustentabilidade 2025",
-          labels: ["menos emissões totais", "energia renovável em DCs de 4 países", "data centers"],
-          body: "Conectamos pessoas, empresas e oportunidades por meio de infraestrutura crítica projetada para promover crescimento sustentável e inovação.",
-        },
-      };
-      const STATS = [
-        { value: 11, suffix: "%" },
-        { value: 100, suffix: "%" },
-        { value: 20, suffix: "" },
-      ];
-
-      const vars = window.__hyperframes?.getVariables?.() ?? {};
-      const lang = COPY[vars.lang] ? vars.lang : "es";
-      const copy = COPY[lang];
-      document.documentElement.lang = lang;
-
-      const splitWords = (el, text) => {
-        el.textContent = "";
-        text.split(" ").forEach((word, i, arr) => {
-          const span = document.createElement("span");
-          span.className = "w";
-          span.textContent = word;
-          el.appendChild(span);
-          if (i < arr.length - 1) el.appendChild(document.createTextNode(" "));
-        });
-        return el.querySelectorAll(".w");
-      };
-
-      const titleWords = splitWords(document.getElementById("title"), copy.title);
-      const bodyWords = splitWords(document.getElementById("body"), copy.body);
-      document.getElementById("subtitle").textContent = copy.subtitle;
-      copy.labels.forEach((t, i) => {
-        document.getElementById(`label-${i + 1}`).textContent = t;
-      });
-
-      // ---------- Timeline (120 BPM: un pulso cada 0,5 s) ----------
-      const tl = gsap.timeline({ paused: true });
-
-      // Fondo: revelado izquierda → derecha (sigue el flujo de la onda) + avance lento continuo
-      tl.fromTo(
-        "#bg-reveal",
-        { "--reveal": "-8%" },
-        { "--reveal": "100%", duration: 2.4, ease: "power2.out" },
-        0,
-      );
-      tl.set("#bg-img", { opacity: 0.45, scale: 1.02, y: 150, transformOrigin: "50% 50%" }, 0);
-      tl.to("#bg-img", { opacity: 1, duration: 2.0, ease: "power1.out" }, 0);
-      tl.to("#bg-img", { scale: 1.11, duration: 4.4, ease: "none" }, 0);
-      // 4,5 s: la imagen sube y se oscurece para dar paso a las cifras
-      tl.to("#bg-img", { y: 40, scale: 1.18, duration: 1.1, ease: "power3.inOut" }, 4.4);
-      tl.to("#bg-img", { scale: 1.26, duration: 9.5, ease: "none" }, 5.5);
-      tl.to("#bg-dim", { opacity: 0.5, duration: 1.1, ease: "power2.inOut" }, 4.4);
-      tl.to("#bg-foot", { opacity: 1, duration: 1.2, ease: "power2.inOut" }, 9.2);
-
-      // Titular: cascada de palabras
-      tl.fromTo(
-        titleWords,
-        { y: 34, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.6, ease: "power3.out", stagger: 0.07 },
-        0.3,
-      );
-      tl.fromTo(
-        "#subtitle",
-        { y: 24, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.6, ease: "power3.out" },
-        1.3,
-      );
-
-      // Red: la línea se traza y el pulso recorre los tres nodos
-      tl.fromTo("#net-line", { scaleX: 0 }, { scaleX: 1, duration: 4.0, ease: "none" }, 4.6);
-      tl.fromTo(
-        ".card",
-        { y: 30, opacity: 0 },
-        { y: 0, opacity: 0.55, duration: 0.5, ease: "power3.out", stagger: 0.12 },
-        4.5,
-      );
-      tl.set("#pulse", { x: 0, opacity: 0 }, 0);
-      tl.to("#pulse", { opacity: 1, duration: 0.2 }, 4.6);
-      // Llega a cada nodo en 5,0 / 6,5 / 8,0 s (centros: 228 / 540 / 852 px)
-      tl.to("#pulse", { x: 228, duration: 0.4, ease: "power1.in" }, 4.6);
-      tl.to("#pulse", { x: 540, duration: 1.5, ease: "sine.inOut" }, 5.0);
-      tl.to("#pulse", { x: 852, duration: 1.5, ease: "sine.inOut" }, 6.5);
-      tl.to("#pulse", { x: 1100, duration: 0.9, ease: "power1.in" }, 8.0);
-      tl.to("#pulse", { opacity: 0, duration: 0.3 }, 8.6);
-
-      const hits = [5.0, 6.5, 8.0];
-      STATS.forEach((s, i) => {
-        const n = i + 1;
-        const at = hits[i];
-        const card = `#card-${n}`;
-        const numEl = document.getElementById(`num-${n}`);
-        tl.to(card, { opacity: 1, duration: 0.3, ease: "power2.out" }, at);
-        tl.fromTo(
-          numEl,
-          { opacity: 0, scale: 0.92 },
-          { opacity: 1, scale: 1, duration: 0.35, ease: "power3.out" },
-          at,
-        );
-        tl.fromTo(
-          `${card} .node`,
-          { scale: 1 },
-          { scale: 1.9, duration: 0.18, ease: "power2.out", yoyo: true, repeat: 1 },
-          at,
-        );
-        tl.fromTo(
-          `${card} .card-glow`,
-          { opacity: 0 },
-          { opacity: 1, duration: 0.25, ease: "power2.out" },
-          at,
-        );
-        tl.to(
-          `${card} .card-glow`,
-          { opacity: 0.35, duration: 0.8, ease: "power2.inOut" },
-          at + 0.5,
-        );
-        const counter = { v: 0 };
-        tl.fromTo(
-          counter,
-          { v: 0 },
-          {
-            v: s.value,
-            duration: 1.1,
-            ease: "power2.out",
-            onUpdate: () => {
-              numEl.textContent = `${Math.round(counter.v)}${s.suffix}`;
-            },
-          },
-          at,
-        );
-        tl.fromTo(
-          `#label-${n}`,
-          { y: 14, opacity: 0 },
-          { y: 0, opacity: 1, duration: 0.5, ease: "power3.out" },
-          at + 0.15,
-        );
-      });
-
-      // Cierre: texto institucional en cascada
-      tl.fromTo(
-        bodyWords,
-        { y: 20, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.55, ease: "power3.out", stagger: 0.03 },
-        10.0,
-      );
-
-      // Segundo recorrido del pulso: confirma la red completa antes del final
-      tl.set("#pulse", { x: 0 }, 12.0);
-      tl.to("#pulse", { opacity: 0.85, duration: 0.2 }, 12.0);
-      tl.to("#pulse", { x: 1100, duration: 1.8, ease: "none" }, 12.0);
-      tl.to("#pulse", { opacity: 0, duration: 0.3 }, 13.5);
-      [12.37, 12.88, 13.39].forEach((t, i) => {
-        tl.fromTo(
-          `#card-${i + 1} .card-glow`,
-          { opacity: 0.35 },
-          { opacity: 0.9, duration: 0.2, ease: "power2.out", yoyo: true, repeat: 1 },
-          t,
-        );
-      });
-
-      window.__timelines["placa-sostenibilidad"] = tl;
+      window.__timelines["placa-sostenibilidad"] = window.createPlacaTimeline();
     </script>
   </body>
 </html>
