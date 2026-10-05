@@ -61,5 +61,5 @@ Medido en el MP4 final (v02): −16,0 LUFS integrados, pico −1,4 dB. La pista 
 ## Pendientes
 
 - Confirmar con marca que la versión negativa del logo duo (letras blancas) es la aprobada para fondo oscuro, o reemplazar por el archivo negativo oficial si existe.
-- Fuente y fecha verificable de las cifras (11 %, 100 % en DC de 4 países, 20 data centers): se tomaron tal cual de la placa entregada.
+- Fuente y fecha verificable de las cifras (11 %, 100 % en data centers de 4 países, 20 data centers): se tomaron tal cual de la placa entregada.
 - Revisión de las traducciones EN/PT por el equipo de marca.

@@ -8,7 +8,7 @@ window.createPlacaTimeline = function createPlacaTimeline() {
       subtitle: "Informe de Sostenibilidad 2025",
       labels: [
         "menos emisiones totales",
-        "energía renovable en DC de 4\u00a0países",
+        "energía renovable en data centers de 4\u00a0países",
         "data centers",
       ],
       body: "Conectamos personas, empresas y oportunidades mediante infraestructura crítica diseñada para promover crecimiento sostenible e innovación.",
@@ -18,7 +18,7 @@ window.createPlacaTimeline = function createPlacaTimeline() {
       subtitle: "2025 Sustainability Report",
       labels: [
         "lower total emissions",
-        "renewable energy in DCs across 4\u00a0countries",
+        "renewable energy in data centers across 4\u00a0countries",
         "data centers",
       ],
       body: "We connect people, businesses and opportunities through critical infrastructure designed to drive sustainable growth and innovation.",
@@ -28,7 +28,7 @@ window.createPlacaTimeline = function createPlacaTimeline() {
       subtitle: "Relatório de Sustentabilidade 2025",
       labels: [
         "menos emissões totais",
-        "energia renovável em DCs de 4\u00a0países",
+        "energia renovável em data centers de 4\u00a0países",
         "data centers",
       ],
       body: "Conectamos pessoas, empresas e oportunidades por meio de infraestrutura crítica projetada para promover crescimento sustentável e inovação.",
