@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=960, height=540" />
+    <title>Cirion · Drones sobre el océano</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        background: #000000;
+      }
+      #root {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: #000000;
+      }
+      #escena {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+      #fundido {
+        position: absolute;
+        inset: 0;
+        background: #000000;
+        pointer-events: none;
+      }
+    </style>
+  </head>
+  <body>
+    <!--
+      Composición a 960×540 (preview). El master 1920×1080 se renderiza desde este
+      mismo archivo con `--resolution landscape` (Chrome a DPR 2); ver README.md.
+    -->
+    <div
+      id="root"
+      data-composition-id="cirion-drones-oceano"
+      data-start="0"
+      data-width="960"
+      data-height="540"
+      data-duration="12"
+      data-fps="30"
+      data-no-timeline
+    >
+      <canvas id="escena"></canvas>
+      <div id="fundido"></div>
+      <audio
+        id="banda-sonora"
+        src="assets/audio/banda-sonora.m4a"
+        data-start="0"
+        data-duration="12"
+        data-track-index="1"
+      ></audio>
+    </div>
+    <script type="module" src="src/scene.js"></script>
+  </body>
+</html>
