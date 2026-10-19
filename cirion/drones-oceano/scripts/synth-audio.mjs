@@ -1,5 +1,7 @@
-// Banda sonora procedural (estéreo, 48 kHz, 12 s). Síntesis determinista con semilla:
-// no usa muestras ni pistas de terceros. Lee los tiempos de src/config.js para quedar
+// Banda sonora procedural (estéreo, 48 kHz, 12 s): ciudad y bahía nocturnas, show de
+// drones, picada del cable, ingreso al agua, descenso y pulso en el lecho.
+// Síntesis determinista con semilla: no usa muestras ni pistas de terceros.
+// Lee los tiempos de src/config.js para quedar
 // sincronizada con la imagen.
 // Uso: node scripts/synth-audio.mjs   → assets/audio/banda-sonora.raw.wav
 //      bash scripts/normalize-audio.sh → assets/audio/banda-sonora.m4a (−16 LUFS, AAC)
@@ -105,6 +107,26 @@ for (const [ch, pan, fase] of [
     const n = pink();
     const v = lp.run(n) * 0.36 * swell + foam.run(rnd() * 2 - 1) * 0.022 * swell ** 3;
     const env = smoothstep(0, 1.0, t) * lerp(1, 0.55, smoothstep(T.picada[0], T.cruceCamara, t));
+    put(sup, null, i, v * env, pan);
+  }
+}
+
+// ---------------------------------------------------------------- 1b. ciudad lejana al otro lado de la bahía
+// Rumor de tránsito (banda media difusa) y zumbido urbano grave, muy por debajo del agua.
+for (const [ch, pan] of [
+  [0, -0.35],
+  [1, 0.35],
+]) {
+  const rnd = mulberry32(CONFIG.semilla + 21 + ch);
+  const pink = pinkNoise(rnd);
+  const bp = new Biquad().set("bp", 420, 0.5);
+  const lp = new Biquad().set("lp", 160, 0.7);
+  for (let i = 0; i < N; i++) {
+    const t = ts(i);
+    const ola = 0.75 + 0.25 * Math.sin(TAU * 0.11 * t + ch * 2.1);
+    const n = pink();
+    const v = bp.run(n) * 0.11 * ola + lp.run(n) * 0.16;
+    const env = smoothstep(0, 1.0, t) * (1 - smoothstep(T.picada[0], T.cruceCamara, t) * 0.85);
     put(sup, null, i, v * env, pan);
   }
 }
@@ -281,6 +303,32 @@ for (const [ch, pan, fase] of [
         (1 - smoothstep(T.llegadaFondo - 0.3, T.llegadaFondo + 0.2, t));
       put(agua, revAgua, i, swish[0].run(rnd() * 2 - 1) * e * 0.2, -0.3, 0.2);
       put(agua, revAgua, i, swish[1].run(rnd() * 2 - 1) * e * 0.2, 0.3, 0.2);
+    }
+  }
+}
+
+// ---------------------------------------------------------------- 6b. zumbido eléctrico del cable al descender
+{
+  const [a, b] = range(T.picada[1], T.llegadaFondo + 1.2);
+  const lp = [new Biquad().set("lp", 700, 0.7), new Biquad().set("lp", 650, 0.7)];
+  for (let i = a; i < b; i++) {
+    const t = ts(i);
+    const env =
+      smoothstep(T.picada[1], T.cruceCamara + 0.4, t) *
+      (1 - smoothstep(T.llegadaFondo, T.llegadaFondo + 1.2, t));
+    // armónicos impares de 60 Hz, con leve vibrato distinto por canal (sin batidos extremos)
+    for (const ch of [0, 1]) {
+      const f = 60 * (1 + 0.002 * Math.sin(TAU * (0.7 + ch * 0.2) * t));
+      let v = 0;
+      for (const [h, g] of [
+        [1, 0.5],
+        [3, 0.35],
+        [5, 0.2],
+        [7, 0.1],
+      ]) {
+        v += Math.sin(TAU * f * h * t) * g;
+      }
+      put(agua, null, i, lp[ch].run(v) * 0.018 * env, ch ? 0.3 : -0.3);
     }
   }
 }

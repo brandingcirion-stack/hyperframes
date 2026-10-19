@@ -1,6 +1,6 @@
 // Parámetros centralizados de la pieza. Todo lo ajustable vive aquí:
-// duración, tiempos de cada tramo, colores, partículas, brillo, agua y cámara.
-// Unidades de mundo ≈ metros. Tiempos en segundos de composición.
+// duración, tiempos de cada tramo, colores, ciudad, logo 3D, cable, agua, cámara y
+// posproceso. Unidades de mundo = metros. Tiempos en segundos de composición.
 
 export const CONFIG = {
   duracion: 12,
@@ -19,106 +19,139 @@ export const CONFIG = {
     // Letras del logo duo sobre fondo nocturno (versión negativa: blanco).
     letrasLogo: "#FFFFFF",
     lechoMarino: "#4A5868",
+    bruma: "#0B1A3A", // bruma urbana (contaminación lumínica en azul profundo)
   },
 
   // Guion por tramos (ver README.md).
   tiempos: {
-    fundidoEntrada: 0.6, // la escena aparece desde negro
+    fundidoEntrada: 0.6,
     encendido: [0.0, 0.9], // los drones se encienden escalonados
-    formacion: [0.3, 2.85], // vuelo hasta su lugar en el logo (llegan antes de 2.9)
-    duracionVuelo: [1.45, 1.75], // duración individual del vuelo (min, max)
+    formacion: [0.3, 2.85], // vuelo hasta su lugar en el logo
+    duracionVuelo: [1.45, 1.75],
     sosten: [3.0, 5.0],
     convergencia: [5.0, 6.5],
-    salidaConvergencia: [5.0, 5.55], // ventana en la que cada punto abandona su lugar
+    salidaConvergencia: [5.0, 5.55],
     duracionConvergencia: [0.7, 0.85],
-    compresion: [6.15, 6.5], // el núcleo se comprime y acumula energía
-    picada: [6.5, 7.6], // el haz baja en diagonal hasta tocar el agua
-    cruceCamara: 7.86, // la cámara atraviesa la superficie
+    compresion: [6.15, 6.5],
+    picada: [6.5, 7.6], // el extremo del cable baja en diagonal hasta tocar el agua
+    cruceCamara: 7.86,
     llegadaFondo: 10.55,
     pulso: [10.55, 11.9],
-    pausaFinal: 11.35, // la cámara queda prácticamente quieta desde aquí
+    pausaFinal: 11.35,
   },
 
+  // Show de drones: logo extruido en 3D sobre la costa de la ciudad.
   logo: {
-    // Composición en el primer cuadro.
-    anchoPantalla: 0.54, // fracción del ancho de cuadro
-    centroY: 0.36, // fracción del alto, desde arriba
-    distancia: 200,
-    // Muestreo de la geometría oficial (unidades del viewBox del SVG, 1140 de ancho).
-    espaciado: 13.5, // distancia mínima entre drones
-    pasoContorno: 11, // muestreo a lo largo del contorno
-    margenContorno: 3.2, // los puntos del contorno se retraen hacia dentro (en unidades SVG)
+    centro: [0, 250, -560], // centro de la cara frontal
+    ancho: 380, // m
+    profundidad: 40, // extrusión (m)
+    capasProfundidad: 3, // anillos de contorno detrás de la cara frontal
+    giro: -24, // grados de giro sobre su eje vertical respecto de la cámara inicial
+    espaciado: 13.5, // unidades del viewBox del SVG (1140 de ancho)
+    pasoContorno: 11,
+    margenContorno: 3.2,
   },
 
   particulas: {
-    tamano: 1.55, // radio del núcleo en px (a 960 de ancho)
-    halo: 4.6, // radio del halo en px
-    intensidadNucleo: 1.0,
-    intensidadHalo: 0.17,
-    estelaMax: 6, // largo máx. de la estela de movimiento (px)
-    arcoVuelo: 9, // elevación del arco durante el vuelo (m)
-    giroConvergencia: 0.8, // radianes de giro en espiral al converger
+    tamano: 1.15, // radio del núcleo en px (a 960 de ancho)
+    halo: 3.0,
+    intensidad: 2.6, // HDR: el bloom construye el resplandor
+    intensidadHalo: 0.12,
+    brilloCapas: [1.0, 0.5, 0.36, 0.26], // cara frontal → capas traseras
+    estelaMax: 6,
+    arcoVuelo: 30, // m
+    giroConvergencia: 0.8,
   },
 
   nucleo: {
-    radio: 10, // px del halo al máximo antes de comprimirse
-    radioComprimido: 4.2,
-    brumaM: 4.5, // m de resplandor azul alrededor del núcleo (acumulación de energía)
-    intensidad: 1.15,
+    radio: 9,
+    radioComprimido: 4,
+    brumaM: 14, // m de resplandor alrededor del núcleo
+    intensidad: 9,
   },
 
-  haz: {
-    estelaCielo: 0.9, // s de estela visible en la picada
-    estelaAgua: 0.75, // s de estela bajo el agua (se desvanece)
-    anchoPx: 5.5, // ancho del haz junto a la punta
-    halo: 10, // px del halo de la punta
-    haloAgua: 2.4, // m de dispersión alrededor de la punta bajo el agua
-    hiloMagenta: 0.55, // intensidad del filamento magenta
+  // Cable de red submarino (fibra óptica con armadura de acero).
+  cable: {
+    diametro: 1.5, // m (estilizado para leerse desde lejos)
+    vidaCielo: 0.55, // s: el tramo aéreo se disuelve en luz tras ese tiempo
+    energiaCielo: 3.2, // emisión del tramo aéreo (energizado)
+    pulsos: { velocidad: 22, separacion: 14, intensidad: 1.1 }, // datos que viajan (m/s, m)
+    hilos: 22, // alambres de la armadura helicoidal
+    paso: 3.2, // m por vuelta de la hélice
+    puntaHalo: 12, // px
+  },
+
+  ciudad: {
+    costa: -470, // z de la costanera
+    x: [-1700, 1700],
+    fondo: -2900,
+    manzana: 74, // m
+    calle: 20,
+    alturaBase: 28,
+    clusters: [
+      { x: -180, z: -1100, alto: 300, rx: 650, rz: 520 },
+      { x: 760, z: -1550, alto: 200, rx: 420, rz: 420 },
+      { x: -950, z: -1650, alto: 160, rx: 380, rz: 380 },
+    ],
+    torreIconica: { x: -330, z: -940, alto: 480, lado: 52 },
+    ventanas: 0.32, // intensidad de ventanas
+    autos: 170,
+    puente: { desde: [-340, 22, -150], hasta: [-720, 22, -480], ancho: 26, pilas: 90 },
+  },
+
+  atmosfera: {
+    bruma: 0.00028, // densidad de bruma por metro
+    nubes: 0.35,
   },
 
   agua: {
-    reflejo: 0.42, // intensidad del reflejo del logo
-    fragmentacion: 0.62, // 0 = espejo, 1 = muy roto
-    distorsion: 0.012,
-    oleaje: 0.35, // amplitud visual del oleaje
-    niebla: 0.027, // densidad de niebla submarina
-    anillo: { velocidad: 7, ancho: 0.7, duracion: 1.4 },
-    burbujas: 14,
+    reflejo: 1.0,
+    distorsion: 0.03,
+    oleaje: 0.35,
+    niebla: 0.027,
+    anillo: { velocidad: 7, ancho: 0.9, duracion: 1.4 },
+    burbujas: 16,
   },
 
   submarino: {
-    nieve: 1400, // partículas suspendidas
-    rayos: 5, // haces de luz desde la superficie
+    nieve: 1600,
+    rayos: 5,
     pulso: { radioMax: 18, ancho: 1.4 },
   },
 
-  // Recorrido del haz.
+  // Recorrido del extremo del cable.
   recorrido: {
-    entrada: [14, 0, -66], // punto donde el haz toca el agua
-    controlPicada: [2, 34, -150], // curva de la picada (Bézier cuadrática)
-    fondo: [22, null, -80], // xz del punto de llegada; y = relieve del lecho
-    profundidad: 58,
+    entrada: [46, 0, -158], // donde toca el agua
+    controlPicada: [22, 120, -380],
+    fondo: [84, null, -236], // xz donde queda apoyado; y = relieve del lecho
+    llegadaHorizontal: [0.55, -0.83], // dirección (x, z) con la que se apoya en el lecho
+    profundidad: 46,
   },
 
-  // Cámara: claves [t, posición, objetivo]. `objetivo: "logo"` mira al logo;
-  // `"haz"` sigue la punta del haz. Interpolación cúbica continua en el tiempo.
+  // Cámara: claves [t, pos, mira]. `mira` es el objetivo antes del seguimiento;
+  // desde `seguimiento.inicio` la cámara sigue el extremo del cable.
   camara: {
-    fov: 40,
-    horizonteY: 2 / 3, // fracción del alto en la que cae el horizonte en el primer cuadro
+    fov: 50,
     claves: [
-      { t: 0.0, pos: [0, 4, 0] },
-      { t: 3.0, pos: [0, 4, -1.5] },
-      { t: 5.0, pos: [0, 4.1, -8] },
-      { t: 6.5, pos: [0.4, 4.2, -13] },
-      { t: 7.2, pos: [6, 3.0, -38] },
-      { t: 7.86, pos: [12.5, 0, -57.5] },
-      { t: 8.6, pos: [14.5, -9, -63] },
-      { t: 9.6, pos: [16, -24, -66] },
-      { t: 10.6, pos: [17, -35.5, -66.5] },
-      { t: 11.35, pos: [17, -38.8, -66.7], quieta: true },
-      { t: 12.0, pos: [17, -39.0, -66.75], quieta: true },
+      { t: 0.0, pos: [-120, 14, 60], mira: [-30, 150, -560] },
+      { t: 3.0, pos: [-78, 15, 36], mira: [-20, 155, -560] },
+      { t: 5.0, pos: [-30, 17, 12], mira: [-8, 160, -560] },
+      { t: 6.5, pos: [-8, 18, -4], mira: [0, 190, -560] },
+      { t: 7.2, pos: [16, 14, -62] },
+      { t: 7.86, pos: [36, 0, -132] },
+      { t: 8.6, pos: [42, -10, -150] },
+      { t: 9.6, pos: [52, -24, -176] },
+      { t: 10.6, pos: [62, -34, -204], quieta: false },
+      { t: 11.35, pos: [64, -36, -208], quieta: true },
+      { t: 12.0, pos: [64.2, -36.1, -208.3], quieta: true },
     ],
-    // Hacia dónde mira: mezcla logo→haz y retraso de seguimiento.
-    seguimiento: { inicio: 6.35, fin: 6.75, retraso: 0.16, retrasoAgua: 0.03 },
+    seguimiento: { inicio: 6.3, fin: 6.8, retraso: 0.16, retrasoAgua: 0.04 },
+  },
+
+  posproceso: {
+    exposicion: 1.0,
+    bloom: { umbral: 1.4, intensidad: 0.6, radio: 0.7 },
+    vineta: 0.32,
+    grano: 0.018,
   },
 };
