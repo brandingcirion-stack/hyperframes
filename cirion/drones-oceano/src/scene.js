@@ -1,8 +1,8 @@
-// Cirion · Drones sobre la ciudad — escena Three.js controlada por tiempo.
+// Cirion · Conexión entre ciudades — escena Three.js controlada por tiempo.
 // Cada cuadro se calcula solo a partir de `t` (evento hf-seek de HyperFrames):
 // sin reloj del navegador, sin requestAnimationFrame y con semilla fija.
 import * as THREE from "../vendor/three.module.min.js";
-import { createCable } from "./cable.js";
+import { createCable, createTroncal } from "./cable.js";
 import { createCity } from "./city.js";
 import { CONFIG } from "./config.js";
 import { COMMON } from "./glsl.js";
@@ -24,14 +24,13 @@ const C = CONFIG;
 const T = C.tiempos;
 const W = C.base.ancho;
 const H = C.base.alto;
-// 1 en el preview (960×540); 2 en el master (`--resolution landscape`).
-const DPR = window.devicePixelRatio || 1;
+const DPR = window.devicePixelRatio || 1; // 1 en el preview; 2 en el master
+const DT = 1 / C.fps;
 
-// Flujo lineal HDR: los colores sRGB de marca se convierten a lineal y el
-// posproceso aplica tonemapping fílmico y la curva sRGB de salida.
 const color = (hex) => new THREE.Color(hex);
 const COL = Object.fromEntries(Object.entries(C.colores).map(([k, v]) => [k, color(v)]));
 const blancoAzul = color("#DFF4FF");
+const V3 = (a) => new THREE.Vector3(...a);
 
 // ---------------------------------------------------------------- renderer
 const canvas = document.getElementById("escena");
@@ -49,9 +48,9 @@ const post = createPost(renderer, { ancho: W, alto: H, dpr: DPR, cfg: C.posproce
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(C.camara.fov, W / H, 0.5, 9000);
+const camPrev = camera.clone(); // cámara del cuadro anterior (estelas de velocidad)
 const tanHalf = Math.tan(THREE.MathUtils.degToRad(C.camara.fov / 2));
 
-// Reflejo planar: el mundo espejado (y → −y) visto desde la misma cámara.
 const rtW = Math.round((W * DPR) / 2);
 const rtH = Math.round((H * DPR) / 2);
 const reflectRT = new THREE.WebGLRenderTarget(rtW, rtH, { type: THREE.HalfFloatType });
@@ -72,15 +71,17 @@ const U = {
   uFogDensity: { value: C.agua.niebla },
   uFogTop: { value: COL.azulProfundo.clone().multiplyScalar(0.85) },
   uFogBottom: { value: color("#000308") },
-  uFondo: { value: C.recorrido.profundidad },
+  uFondo: { value: 46 },
   uHaze: { value: COL.bruma },
   uHazeDensity: { value: C.atmosfera.bruma },
   uAzul: { value: COL.azul },
   uMagenta: { value: COL.magenta },
   uHead: { value: new THREE.Vector3() },
   uHeadI: { value: 0 },
+  uPulsePos: { value: new THREE.Vector3(0, -999, 0) },
+  uPulseI: { value: 0 },
+  uPrevVP: { value: new THREE.Matrix4() },
 };
-
 const additive = {
   transparent: true,
   depthWrite: false,
@@ -89,49 +90,144 @@ const additive = {
 };
 const quad = new THREE.PlaneGeometry(2, 2);
 
-// ---------------------------------------------------------------- relieve del lecho
+// ---------------------------------------------------------------- lecho marino
 const noise = makeNoise2D(C.semilla + 7);
+function profundidad(x) {
+  const L = C.lecho;
+  if (x <= L[0][0]) return L[0][1];
+  for (let i = 1; i < L.length; i++) {
+    if (x <= L[i][0]) {
+      const s = (x - L[i - 1][0]) / (L[i][0] - L[i - 1][0]);
+      return lerp(L[i - 1][1], L[i][1], s * s * (3 - 2 * s));
+    }
+  }
+  return L[L.length - 1][1];
+}
+const J = (() => {
+  const [x, z] = C.troncal.puntos[C.troncal.union];
+  return { x, z };
+})();
+// Relieve a gran escala (el detalle fino lo pone el shader); se aplana en el empalme.
 function relieve(x, z) {
-  let h = 2.4 * noise(x * 0.032, z * 0.032);
-  h += 1.1 * noise(x * 0.09 + 13, z * 0.09 - 7);
-  h += 0.4 * noise(x * 0.24 - 3, z * 0.24 + 5);
-  const w = noise(x * 0.05 + 40, z * 0.05);
-  h += (0.05 + 0.07 * (w + 1)) * Math.sin((x * 0.55 + z * 0.85) * 3.8 + w * 6);
+  let h = 2.4 * noise(x * 0.032, z * 0.032) + 1.1 * noise(x * 0.09 + 13, z * 0.09 - 7);
   const r = noise(x * 0.07 - 20, z * 0.07 + 31);
   h += Math.max(0, r - 0.35) * 5.5;
-  // zona de arena casi plana donde se apoya el cable
-  const dS = Math.hypot(x - C.recorrido.fondo[0], z - C.recorrido.fondo[2]);
-  return h * (0.15 + 0.85 * smoothstep(10, 34, dS));
+  const dJ = Math.hypot(x - J.x, z - J.z);
+  h *= 0.15 + 0.85 * smoothstep(10, 34, dJ);
+  return h * smoothstep(1, 14, profundidad(x));
 }
-const seabedY = (x, z) => -C.recorrido.profundidad + relieve(x, z);
+const seabedY = (x, z) => -profundidad(x) + relieve(x, z);
 
 // ---------------------------------------------------------------- logo 3D (show de drones)
 const claves = C.camara.claves;
-const C0 = new THREE.Vector3(...claves[0].pos);
-const K = new THREE.Vector3(...C.logo.centro);
-// frente del logo: mira a la cámara inicial, girado `giro` grados sobre su eje vertical
+const C0 = V3(claves[0].pos);
+const K = V3(C.logo.centro);
 const lFront = new THREE.Vector3(C0.x - K.x, 0, C0.z - K.z)
   .normalize()
   .applyAxisAngle(new THREE.Vector3(0, 1, 0), THREE.MathUtils.degToRad(C.logo.giro));
 const lUp = new THREE.Vector3(0, 1, 0);
 const lRight = new THREE.Vector3().crossVectors(lFront.clone().negate(), lUp).normalize();
+const Kc = K.clone().addScaledVector(lFront, -C.logo.profundidad / 2); // centro del volumen
 
-// ---------------------------------------------------------------- recorrido del extremo del cable
-const E = new THREE.Vector3(...C.recorrido.entrada);
-const CtrlSky = new THREE.Vector3(...C.recorrido.controlPicada);
-const [fx, , fz] = C.recorrido.fondo;
+// ---------------------------------------------------------------- troncal y empalme
+const RT = C.troncal.diametro / 2;
+const troncalPts = (() => {
+  const ctrl = C.troncal.puntos.map(([x, z]) => new THREE.Vector3(x, 0, z));
+  const curva = new THREE.CatmullRomCurve3(ctrl, false, "centripetal");
+  const largo = curva.getLength();
+  const n = Math.ceil(largo / 1.0);
+  const pts = curva.getSpacedPoints(n).map((p) => {
+    p.y = seabedY(p.x, p.z) + RT;
+    return p;
+  });
+  // en la costa de la ciudad B sube por el muro hasta la estación de amarre
+  const fin = pts[pts.length - 1];
+  const am = V3(C.ciudadB.amarre);
+  const tramo = [
+    [fin.x + 4, -0.4, fin.z],
+    [fin.x + 7.2, 1.2, fin.z],
+    [fin.x + 9.5, am.y, fin.z],
+    [am.x - 2, am.y, am.z],
+  ];
+  for (const [x, y, z] of tramo) {
+    const a = pts[pts.length - 1];
+    const b = new THREE.Vector3(x, y, z);
+    const k = Math.max(1, Math.ceil(a.distanceTo(b) / 0.6));
+    for (let i = 1; i <= k; i++) pts.push(a.clone().lerp(b, i / k));
+  }
+  return pts;
+})();
+const troncal = createTroncal({ U, C, scene, puntos: troncalPts });
+// posición del empalme sobre el troncal
+let sJ = 0;
+{
+  let best = 1e9;
+  let acc = 0;
+  troncalPts.forEach((p, i) => {
+    if (i) acc += p.distanceTo(troncalPts[i - 1]);
+    const d = Math.hypot(p.x - J.x, p.z - J.z);
+    if (d < best) {
+      best = d;
+      sJ = acc;
+    }
+  });
+}
+const Jp = troncal.puntoEn(sJ, new THREE.Vector3());
+const tJ = troncal
+  .puntoEn(sJ + 1, new THREE.Vector3())
+  .sub(troncal.puntoEn(sJ - 1, new THREE.Vector3()))
+  .normalize();
+const E = V3(C.cable.entrada);
+// el puerto de derivación mira hacia donde llega el cable nuevo
+const ladoJ = new THREE.Vector3().crossVectors(tJ, new THREE.Vector3(0, 1, 0)).normalize();
+if (ladoJ.dot(new THREE.Vector3(E.x - Jp.x, 0, E.z - Jp.z)) < 0) ladoJ.negate();
+const puerto = Jp.clone()
+  .addScaledVector(ladoJ, 1.1)
+  .add(new THREE.Vector3(0, 0.25, 0));
+
+// pulso de datos por el troncal: velocidad creciente, llega a la estación en T.conexion
+const pulsoTabla = (() => {
+  const [vA, vB] = C.troncal.velocidadPulso;
+  const n = 2000;
+  const ts = [];
+  const ss = [];
+  let s = 0;
+  for (let i = 0; i <= n; i++) {
+    const t = T.viaje[0] + ((T.conexion - T.viaje[0]) * i) / n;
+    const v =
+      lerp(8, vA, smoothstep(T.viaje[0], T.viaje[0] + 0.6, t)) +
+      (vB - vA) * smoothstep(T.viaje[0] + 0.8, T.viaje[0] + 2.2, t);
+    if (i) s += v * ((T.conexion - T.viaje[0]) / n);
+    ts.push(t);
+    ss.push(s);
+  }
+  const escala = (troncal.largo - sJ - 2) / s;
+  return { ts, ss: ss.map((x) => x * escala) };
+})();
+function pulsoS(t) {
+  if (t <= T.viaje[0]) return sJ;
+  if (t >= T.conexion) return troncal.largo;
+  const { ts, ss } = pulsoTabla;
+  const f = ((t - ts[0]) / (ts[ts.length - 1] - ts[0])) * (ts.length - 1);
+  const i = Math.floor(f);
+  return sJ + ss[i] + (ss[Math.min(i + 1, ss.length - 1)] - ss[i]) * (f - i);
+}
+
+// ---------------------------------------------------------------- recorrido del extremo del cable nuevo
+const O = V3(C.cable.origen);
+const CtrlUp = V3(C.cable.controlSubida);
+const CtrlSky = V3(C.cable.controlPicada);
 const R_CABLE = C.cable.diametro / 2;
-const S = new THREE.Vector3(fx, seabedY(fx, fz) + R_CABLE, fz);
-const hDir = new THREE.Vector3(
-  C.recorrido.llegadaHorizontal[0],
-  0,
-  C.recorrido.llegadaHorizontal[1],
-).normalize();
 const dirSky = E.clone().sub(CtrlSky).normalize();
 const W1 = E.clone().addScaledVector(dirSky, 14);
-W1.y = Math.min(W1.y, -6);
-const W2 = S.clone().addScaledVector(hDir, -34);
-W2.y = S.y - 2; // toca el lecho antes y se tiende sobre él
+W1.y = Math.min(W1.y, -8);
+const W2 = puerto
+  .clone()
+  .addScaledVector(ladoJ, 16)
+  .add(new THREE.Vector3(0, 2.5, 0));
+const fin = Jp.clone()
+  .addScaledVector(ladoJ, 0.3)
+  .add(new THREE.Vector3(0, 0.2, 0)); // dentro de la carcasa
 
 function bezier2(a, b, c, p, out) {
   const q = 1 - p;
@@ -151,50 +247,130 @@ function bezier3(a, b, c, d, p, out) {
     .addScaledVector(d, p * p * p);
 }
 function headAt(t, out) {
-  const [t0, t1] = T.picada;
-  if (t <= t0) return out.copy(K);
-  if (t <= t1) {
-    const s = (t - t0) / (t1 - t0);
-    return bezier2(K, CtrlSky, E, 0.62 * s * s + 0.38 * s * s * s, out);
+  const [s0, s1] = T.cableSube;
+  const [d0, d1] = T.picada;
+  if (t <= s0) return out.copy(O);
+  if (t <= s1) return bezier2(O, CtrlUp, Kc, smootherstep((t - s0) / (s1 - s0)), out);
+  if (t <= d0) return out.copy(Kc);
+  if (t <= d1) {
+    const s = (t - d0) / (d1 - d0);
+    return bezier2(Kc, CtrlSky, E, s ** 1.7, out);
   }
-  if (t <= T.llegadaFondo) {
-    const s = (t - t1) / (T.llegadaFondo - t1);
-    bezier3(E, W1, W2, S, 1 - (1 - s) ** 1.7, out);
-  } else {
-    out.copy(S);
+  if (t <= T.llegadaUnion) {
+    const s = (t - d1) / (T.llegadaUnion - d1);
+    bezier3(E, W1, W2, puerto, 1 - (1 - s) ** 1.7, out);
+    out.y = Math.max(out.y, seabedY(out.x, out.z) + R_CABLE);
+    return out;
   }
-  // el cable nunca atraviesa el lecho: se apoya sobre el relieve
-  out.y = Math.max(out.y, seabedY(out.x, out.z) + R_CABLE);
-  return out;
+  const s = smoothstep(T.llegadaUnion, T.llegadaUnion + 0.35, t);
+  return out.copy(puerto).lerp(fin, s);
 }
+const cable = createCable({ U, C, scene, headAt, t0: T.cableSube[0], t1: T.llegadaUnion + 0.4 });
 
+// ---------------------------------------------------------------- cámara
 const camSpline = makeTimeSpline(claves);
-const miraSpline = makeTimeSpline(
-  claves.filter((k) => k.mira).map((k) => ({ t: k.t, pos: k.mira })),
-);
-const _head = new THREE.Vector3();
+const miraSpline = makeTimeSpline(claves.map((k) => ({ t: k.t, pos: k.mira, quieta: k.quieta })));
+const ventana = ([a, b, c, d], t) => smoothstep(a, b, t) * (1 - smoothstep(c, d, t));
+const _a = new THREE.Vector3();
+const _b = new THREE.Vector3();
 const _look = new THREE.Vector3();
-const _mira = new THREE.Vector3();
-function cameraAt(t) {
-  camSpline(t, camera.position);
-  const seg = C.camara.seguimiento;
-  const retraso = lerp(
-    seg.retraso,
-    seg.retrasoAgua,
-    smoothstep(T.picada[1] - 0.1, T.cruceCamara, t),
-  );
-  headAt(Math.max(0, t - retraso), _head);
-  miraSpline(t, _mira);
-  const k = smootherstep((t - seg.inicio) / (seg.fin - seg.inicio));
-  _look.copy(_mira).lerp(_head, k);
-  camera.lookAt(_look);
-  camera.updateMatrixWorld();
+const _seg = new THREE.Vector3();
+function cameraAt(t, cam) {
+  camSpline(t, cam.position);
+  miraSpline(t, _look);
+  // seguimiento del extremo del cable
+  const w1 = ventana(C.camara.sigueCable, t);
+  if (w1 > 0) {
+    headAt(Math.max(0, t - C.camara.sigueCableRetraso), _a);
+    _look.lerp(_a, w1);
+  }
+  // recorrido: la cámara va detrás del pulso de datos, a media altura, y mira adelante
+  const w2 = ventana(C.camara.siguePulso, t);
+  if (w2 > 0) {
+    const s = pulsoS(t);
+    troncal.puntoEn(s - 26, _seg);
+    troncal.puntoEn(s - 25, _b);
+    const tg = _b.sub(_seg).normalize();
+    const lat = new THREE.Vector3(-tg.z, 0, tg.x);
+    _a.copy(_seg)
+      .addScaledVector(lat, 7)
+      .add(new THREE.Vector3(0, 8, 0));
+    _a.y = Math.min(_a.y, -1.8);
+    cam.position.lerp(_a, w2);
+    troncal.puntoEn(s + 22, _b);
+    _b.y += 1.5;
+    _look.lerp(_b, w2);
+  }
+  cam.lookAt(_look);
+  cam.updateMatrixWorld();
 }
 
-// ---------------------------------------------------------------- ciudad
-const ciudad = createCity({ U, C, scene });
+// ---------------------------------------------------------------- ciudades
+const ciudadA = createCity({
+  U,
+  C,
+  scene,
+  cfg: C.ciudadA,
+  variante: "calida",
+  posicion: [0, 0, 0],
+  giro: 0,
+  extras: {
+    zonaLibre: { x: K.x, rx: C.logo.ancho * 0.75, zMin: K.z - 180, hMax: 120 },
+    reservado: [
+      [O.x, O.z],
+      [-450, -530],
+    ],
+    torres: [{ x: O.x, z: O.z, lado: 34, alto: O.y - 4 }],
+    patrimonio: [-450, -530],
+  },
+});
+const B = C.ciudadB;
+const ciudadB = createCity({
+  U,
+  C,
+  scene,
+  cfg: { ...B, costa: 0 },
+  variante: "tecnologica",
+  posicion: [B.costaMundo, 0, 0],
+  giro: -Math.PI / 2, // la tierra local (−z) queda hacia +x en el mundo
+  despertar: [B.amarre[0], B.amarre[2], 0, 1],
+  extras: { reservado: [[B.amarre[0] + 10, B.amarre[2]]] },
+});
+const unaCara = [...ciudadA.unaCara, ...ciudadB.unaCara];
 
-// ---------------------------------------------------------------- drones
+// estación de amarre (ciudad B): volumen bajo con franja LED que se enciende al llegar el pulso
+const estacionMat = new THREE.ShaderMaterial({
+  uniforms: { ...U, uOn: { value: 0 } },
+  vertexShader: /* glsl */ `
+    varying vec3 vWorld, vN;
+    void main() {
+      vN = normal;
+      vec4 wp = modelMatrix * vec4(position, 1.0);
+      vWorld = wp.xyz;
+      gl_Position = projectionMatrix * viewMatrix * wp;
+    }
+  `,
+  fragmentShader: /* glsl */ `
+    ${COMMON}
+    uniform float uOn;
+    uniform vec3 uAzul;
+    varying vec3 vWorld, vN;
+    void main() {
+      vec3 col = vec3(0.012, 0.013, 0.016) + uHaze * 0.3;
+      float franja = smoothstep(0.35, 0.0, abs(vWorld.y - 7.0)) * step(abs(vN.y), 0.5);
+      float puerta = step(abs(vWorld.z - ${B.amarre[2].toFixed(1)}), 3.0) * step(vWorld.y, 5.0) * step(vN.x, -0.5);
+      col += uAzul * (franja * (0.25 + 2.5 * uOn) + puerta * 1.6 * uOn);
+      gl_FragColor = vec4(atmos(col, vWorld), 1.0);
+    }
+  `,
+});
+unaCara.push(estacionMat);
+const estacion = new THREE.Mesh(new THREE.BoxGeometry(22, 9, 44), estacionMat);
+estacion.position.set(B.amarre[0] + 10, 4.5 + 0.4, B.amarre[2]);
+estacion.layers.enable(1);
+scene.add(estacion);
+
+// ---------------------------------------------------------------- drones (logo 3D desde el centro)
 const rnd = mulberry32(C.semilla);
 const muestras = sampleLogo(LOGO, { ...C.logo, semilla: C.semilla });
 const [vbx, vby, vbw, vbh] = LOGO.viewBox;
@@ -205,7 +381,6 @@ for (const m of muestras) {
   const u = (m.x - (vbx + vbw / 2)) * escalaLogo;
   const v = -(m.y - (vby + vbh / 2)) * escalaLogo;
   const c = m.role === "simbolo" ? color(m.fill) : COL.letrasLogo;
-  // cara frontal completa; el contorno se repite en profundidad (volumen extruido)
   const niveles = m.borde ? capas + 1 : 1;
   for (let k = 0; k < niveles; k++) {
     const prof = (C.logo.profundidad * k) / capas;
@@ -217,26 +392,6 @@ for (const m of muestras) {
   }
 }
 const N = targets.length;
-
-// Formación inicial: una «alfombra» horizontal de drones sobre la costa.
-const FILAS = 12;
-const columnas = Math.ceil(N / FILAS);
-const porX = [...targets].sort((a, b) => a.u - b.u || a.prof - b.prof);
-const starts = new Array(N);
-const colFrac = new Float32Array(N);
-for (let c = 0; c < columnas; c++) {
-  const grupo = porX.slice(c * FILAS, (c + 1) * FILAS).sort((a, b) => b.v - a.v);
-  grupo.forEach((tg, r) => {
-    const f = (c + 0.5) / columnas;
-    const p = K.clone()
-      .addScaledVector(lRight, lerp(-0.85, 0.85, f) * C.logo.ancho)
-      .addScaledVector(lFront, lerp(70, -70, r / (FILAS - 1)) + (rnd() - 0.5) * 3);
-    p.y = 62 + (rnd() - 0.5) * 2;
-    starts[tg.i] = p;
-    colFrac[tg.i] = Math.abs(f - 0.5) * 2;
-  });
-}
-
 const maxDist = Math.max(...targets.map((tg) => Math.hypot(tg.u, tg.v)));
 const droneGeo = new THREE.InstancedBufferGeometry();
 droneGeo.index = quad.index;
@@ -247,23 +402,25 @@ const aColor = new Float32Array(N * 3);
 const aForm = new Float32Array(N * 4);
 const aConv = new Float32Array(N * 4);
 const [f0, f1] = T.formacion;
-const [dvMin, dvMax] = T.duracionVuelo;
-const [e0, e1] = T.encendido;
 const [c0, c1] = T.salidaConvergencia;
 const [dcMin, dcMax] = T.duracionConvergencia;
 const brilloCapas = C.particulas.brilloCapas;
 for (const tg of targets) {
   const i = tg.i;
-  starts[i].toArray(aStart, i * 3);
+  // nace junto al centro del logo y vuela hacia afuera: el logo crece del centro al borde
+  const d = Math.hypot(tg.u, tg.v) / maxDist;
+  const ini = Kc.clone()
+    .addScaledVector(lRight, tg.u * 0.16 + (rnd() - 0.5) * 3)
+    .addScaledVector(lUp, tg.v * 0.16 + (rnd() - 0.5) * 3)
+    .addScaledVector(lFront, (rnd() - 0.5) * 6);
+  ini.toArray(aStart, i * 3);
   tg.p.toArray(aTarget, i * 3);
   tg.c.toArray(aColor, i * 3);
-  const dur = lerp(dvMin, dvMax, rnd());
-  const salida = f0 + (colFrac[i] * 0.85 + rnd() * 0.15) * (f1 - f0 - dvMax);
-  const enc = e0 + rnd() * (e1 - e0 - 0.3) * 0.7 + colFrac[i] * (e1 - e0 - 0.3) * 0.3;
-  aForm.set([enc, salida, dur, C.particulas.arcoVuelo * (0.6 + 0.4 * rnd())], i * 4);
-  const lejania = Math.hypot(tg.u, tg.v) / maxDist;
+  const dur = 0.75 + 0.85 * d + rnd() * 0.08;
+  const salida = f0 + Math.min(f1 - f0 - dur, 1.25 * d ** 0.85 + tg.capa * 0.05 + rnd() * 0.06);
+  aForm.set([salida, salida, dur, 14 * (0.6 + 0.4 * rnd())], i * 4);
   const durC = lerp(dcMin, dcMax, rnd());
-  const salidaC = c0 + ((1 - lejania) * 0.85 + rnd() * 0.15) * (c1 - c0);
+  const salidaC = c0 + ((1 - d) * 0.85 + rnd() * 0.15) * (c1 - c0);
   aConv.set([salidaC, durC, rnd(), brilloCapas[Math.min(tg.capa, brilloCapas.length - 1)]], i * 4);
 }
 droneGeo.setAttribute("aStart", new THREE.InstancedBufferAttribute(aStart, 3));
@@ -272,12 +429,11 @@ droneGeo.setAttribute("aColor", new THREE.InstancedBufferAttribute(aColor, 3));
 droneGeo.setAttribute("aForm", new THREE.InstancedBufferAttribute(aForm, 4));
 droneGeo.setAttribute("aConv", new THREE.InstancedBufferAttribute(aConv, 4));
 droneGeo.instanceCount = N;
-
 const droneMat = new THREE.ShaderMaterial({
   ...additive,
   uniforms: {
     ...U,
-    uK: { value: K },
+    uK: { value: Kc },
     uRight: { value: lRight },
     uUp: { value: lUp },
     uFront: { value: lFront },
@@ -288,7 +444,7 @@ const droneMat = new THREE.ShaderMaterial({
     uHaloI: { value: C.particulas.intensidadHalo },
     uStreakMax: { value: C.particulas.estelaMax },
     uCoreColor: { value: COL.azul.clone().multiplyScalar(1.1) },
-    uRefDist: { value: 560 },
+    uRefDist: { value: 600 },
   },
   vertexShader: /* glsl */ `
     ${COMMON}
@@ -306,10 +462,10 @@ const droneMat = new THREE.ShaderMaterial({
       float s = clamp((t - aForm.y) / aForm.z, 0.0, 1.0);
       float p = smoother(s);
       vec3 P = mix(aStart, aTarget, p);
-      P += (vec3(0.0, 0.5, 0.0) + uFront * 0.6) * aForm.w * sin(3.14159265 * p);
-      // flotación mínima en el sostén, como drones reales con viento
+      // leve abombamiento hacia el espectador: el logo «florece» en volumen
+      P += uFront * aForm.w * sin(3.14159265 * p);
       vec3 hover = (uUp * sin(t * 1.1 + aConv.z * 40.0) + uRight * cos(t * 0.9 + aConv.z * 23.0))
-                 * 0.18 * smoothstep(2.6, 3.4, t);
+                 * 0.18 * smoothstep(2.8, 3.6, t);
       float sc = clamp((t - aConv.x) / aConv.y, 0.0, 1.0);
       q = 1.0 - cos(1.5707963 * sc);
       if (sc > 0.0) {
@@ -322,7 +478,9 @@ const droneMat = new THREE.ShaderMaterial({
         P = uK + uRight * rr.x + uUp * rr.y + uFront * (w * (1.0 - q) + sin(3.14159265 * q) * 10.0);
       }
       P += hover * (1.0 - q);
-      alpha = smoothstep(aForm.x, aForm.x + 0.3, t) * (1.0 - smoothstep(0.82, 1.0, sc));
+      // se enciende al despegar del centro
+      // cada dron se enciende a medida que se separa del centro: el logo se abre hacia afuera
+      alpha = smoothstep(0.08, 0.5, p) * (1.0 - smoothstep(0.82, 1.0, sc));
       return P;
     }
 
@@ -338,7 +496,7 @@ const droneMat = new THREE.ShaderMaterial({
       float speed = length(vel);
       vec2 dir = speed > 1e-3 ? vel / speed : vec2(1.0, 0.0);
       vec2 perp = vec2(-dir.y, dir.x);
-      float persp = clamp(uRefDist / distance(P, cameraPosition), 0.6, 3.0);
+      float persp = clamp(uRefDist / distance(P, cameraPosition), 0.6, 2.2);
       float size = uSize * uDpr * persp;
       float halo = uHalo * uDpr * persp;
       float L = min(speed * 0.5, uStreakMax * uDpr * 0.5);
@@ -351,10 +509,8 @@ const droneMat = new THREE.ShaderMaterial({
       gl_Position = c;
       gl_Position.xy += (dir * corner.x * (L + R) + perp * corner.y * R) / (0.5 * uRes) * c.w;
       vColor = mix(aColor, uCoreColor, smoothstep(0.3, 0.9, q) * 0.85);
-      // capas traseras más tenues: se lee el volumen sin empastar la cara frontal
       float capa = mix(aConv.w, 1.0, smoothstep(0.2, 0.8, q));
-      vAlpha = a * capa * sqrt(size / (size + L)) * pow(1.0 - q, 1.5) * atmosLight(P)
-             * (c.w > 0.0 ? 1.0 : 0.0);
+      vAlpha = a * capa * sqrt(size / (size + L)) * pow(1.0 - q, 1.5) * atmosLight(P) * (c.w > 0.0 ? 1.0 : 0.0);
     }
   `,
   fragmentShader: /* glsl */ `
@@ -368,8 +524,7 @@ const droneMat = new THREE.ShaderMaterial({
       float d2 = dx * dx + vLocal.y * vLocal.y;
       float core = exp(-d2 / (vSize * vSize));
       float halo = exp(-d2 / (vHalo * vHalo));
-      vec3 col = vColor * (core + halo * uHaloI) * uI;
-      gl_FragColor = vec4(col * vAlpha, 1.0);
+      gl_FragColor = vec4(vColor * (core + halo * uHaloI) * uI * vAlpha, 1.0);
     }
   `,
 });
@@ -379,7 +534,7 @@ drones.layers.enable(1);
 drones.renderOrder = 5;
 scene.add(drones);
 
-// ---------------------------------------------------------------- núcleo / punta luminosa
+// ---------------------------------------------------------------- punta luminosa del cable / núcleo
 const puntaMat = new THREE.ShaderMaterial({
   ...additive,
   uniforms: {
@@ -447,15 +602,25 @@ scene.add(punta);
 function updatePunta(t) {
   const u = puntaMat.uniforms;
   headAt(t, u.uPos.value);
-  const crece = smoothstep(5.45, 6.15, t);
+  // el cable asoma de la torre de datos; al tocar el logo los drones fluyen hacia el
+  // punto de contacto y el núcleo se carga antes de la picada
+  const crece = smoothstep(T.contacto, T.compresion[0], t);
   const comp = smootherstep((t - T.compresion[0]) / (T.compresion[1] - T.compresion[0]));
-  let I = crece * (1 + 0.45 * comp);
-  let halo = lerp(C.nucleo.radio, C.nucleo.radioComprimido, comp);
-  let core = lerp(1.6, 2.2, comp);
-  if (t > T.picada[0]) {
-    const k = smoothstep(T.picada[0], T.picada[0] + 0.3, t);
-    halo = lerp(halo, C.cable.puntaHalo, k);
-    core = lerp(core, 1.9, k);
+  const cargado = (0.9 + 1.1 * crece) * (1 + 0.45 * comp);
+  let I = 0.9 * smoothstep(T.cableSube[0] - 0.15, T.cableSube[0] + 0.25, t);
+  let halo = C.cable.puntaHalo;
+  const core = 1.8;
+  if (t >= T.contacto && t < T.picada[0]) {
+    I = cargado;
+    halo = lerp(
+      lerp(halo, C.nucleo.radio, smoothstep(T.contacto, T.contacto + 0.3, t)),
+      C.nucleo.radioComprimido,
+      comp,
+    );
+  } else if (t >= T.picada[0]) {
+    const k = smoothstep(T.picada[0], T.picada[0] + 0.4, t);
+    I = lerp(cargado, 1.5, k);
+    halo = lerp(C.nucleo.radioComprimido, C.cable.puntaHalo, k);
   }
   const bruma = crece * (1 - smoothstep(T.picada[0], T.picada[0] + 0.35, t)) * lerp(1, 0.7, comp);
   const agua = smoothstep(T.picada[1], T.picada[1] + 0.4, t);
@@ -466,24 +631,79 @@ function updatePunta(t) {
     if (s <= 0 || s >= 1) return [0, 0];
     return [lerp(46, 2, smootherstep(s)), Math.sin(Math.PI * s) * smoothstep(0, 0.2, s)];
   };
-  const [r1, i1] = anillo(5.75, 0.6);
-  const [r2, i2] = anillo(6.0, 0.5);
+  const [r1, i1] = anillo(T.contacto + 0.2, 0.6);
+  const [r2, i2] = anillo(T.contacto + 0.45, 0.5);
   u.uAnillos.value.set(r1, i1, r2, i2);
-  if (t > T.llegadaFondo) {
-    const f = t - T.llegadaFondo;
-    I *= 1 + 0.55 * (1 - Math.exp(-f * 30)) * Math.exp(-f / 0.25);
-    I *= lerp(1, 0.75, smoothstep(T.llegadaFondo + 0.1, T.pausaFinal, t));
-  }
+  // al empalmar, la punta entra en la carcasa y su luz pasa al empalme
+  I *= 1 - smoothstep(T.llegadaUnion, T.llegadaUnion + 0.5, t);
   u.uI.value = I * (C.nucleo.intensidad / 6);
   u.uHaloPx.value = halo;
   u.uCorePx.value = core;
   U.uHead.value.copy(u.uPos.value);
-  U.uHeadI.value = t > T.picada[0] ? I : 0;
+  U.uHeadI.value = t > T.cableSube[0] ? I : 0;
   punta.visible = I > 0.001;
 }
 
-// ---------------------------------------------------------------- cable
-const cable = createCable({ U, C, scene, headAt, T });
+// ---------------------------------------------------------------- unidad de derivación (empalme)
+const empalmeMat = new THREE.ShaderMaterial({
+  uniforms: { ...U, uOn: { value: 0 }, uCentro: { value: Jp }, uEje: { value: tJ } },
+  vertexShader: /* glsl */ `
+    varying vec3 vWorld, vN;
+    void main() {
+      vN = normalize(mat3(modelMatrix) * normal);
+      vec4 wp = modelMatrix * vec4(position, 1.0);
+      vWorld = wp.xyz;
+      gl_Position = projectionMatrix * viewMatrix * wp;
+    }
+  `,
+  fragmentShader: /* glsl */ `
+    ${COMMON}
+    uniform float uOn, uHeadI, uPulseI;
+    uniform vec3 uCentro, uEje, uAzul, uHead, uPulsePos;
+    varying vec3 vWorld, vN;
+    void main() {
+      vec3 N = normalize(vN);
+      vec3 V = normalize(cameraPosition - vWorld);
+      float x = dot(vWorld - uCentro, uEje);
+      vec3 L = uHead - vWorld;
+      float d2 = dot(L, L);
+      vec3 Ln = L * inversesqrt(max(d2, 1e-4));
+      float att = uHeadI * 2.5 / (1.0 + d2 / 30.0) + uOn * 1.2;
+      float spec = pow(max(dot(N, normalize(Ln + V)), 0.0), 60.0);
+      vec3 metal = vec3(0.05, 0.055, 0.06);
+      vec3 col = metal * (uFogTop * 2.0 + att * max(dot(N, Ln), 0.0)) + mix(vec3(1.0), uAzul, 0.4) * spec * att * 0.6;
+      // juntas de la carcasa: se encienden al conectar
+      float junta = smoothstep(0.05, 0.0, abs(fract(x / 2.6) - 0.5) - 0.46);
+      col += uAzul * junta * uOn * 2.0;
+      col += uAzul * pow(1.0 - max(dot(N, V), 0.0), 4.0) * uOn * 0.12;
+      gl_FragColor = vec4(atmos(col, vWorld), 1.0);
+    }
+  `,
+});
+{
+  const g = new THREE.Group();
+  const cuerpo = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.5, 7.5, 28), empalmeMat);
+  const cono1 = new THREE.Mesh(new THREE.CylinderGeometry(RT * 1.05, 1.5, 2.2, 28), empalmeMat);
+  const cono2 = cono1.clone();
+  cono1.position.y = 4.85;
+  cono2.position.y = -4.85;
+  cono2.rotation.z = Math.PI;
+  const manga = new THREE.Mesh(
+    new THREE.CylinderGeometry(R_CABLE * 1.25, 1.0, 2.4, 24),
+    empalmeMat,
+  );
+  g.add(cuerpo, cono1, cono2);
+  g.position.copy(Jp);
+  g.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), tJ);
+  scene.add(g);
+  // manga del puerto de derivación, orientada hacia el cable que llega
+  manga.position
+    .copy(Jp)
+    .addScaledVector(ladoJ, 1.6)
+    .add(new THREE.Vector3(0, 0.2, 0));
+  manga.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), ladoJ);
+  scene.add(manga);
+}
 
 // ---------------------------------------------------------------- cielo / fondo submarino
 const domo = new THREE.Mesh(
@@ -506,8 +726,7 @@ const domo = new THREE.Mesh(
       void main() {
         vec3 d = normalize(vDir);
         float el = d.y;
-        // cielo urbano: negro en el cenit, resplandor de la ciudad en el horizonte
-        vec3 sky = uHaze * (0.12 + 2.8 * exp(-max(el, 0.0) * 9.0));
+        vec3 sky = uHaze * (0.12 + 2.6 * exp(-max(el, 0.0) * 8.0));
         if (el > 0.0) {
           vec2 cp = d.xz / (el + 0.08) * 0.8 + vec2(uTime * 0.012, 0.0);
           float n = fbm(cp * 1.1);
@@ -515,7 +734,6 @@ const domo = new THREE.Mesh(
           sky += uHaze * nub * uNubes * 5.0 * exp(-el * 5.0);
         }
         float depth = max(-cameraPosition.y, 0.0);
-        // hacia abajo y en el horizonte coincide con la niebla sobre el lecho (sin costura)
         vec3 abajo = waterColorAt(mix(-depth, -uFondo, 0.5));
         vec3 arriba = waterColorAt(-depth) * (1.0 + 0.5 * smoothstep(0.0, 1.0, d.y));
         vec3 under = mix(abajo, arriba, smoothstep(-0.02, 0.7, d.y));
@@ -526,7 +744,7 @@ const domo = new THREE.Mesh(
 );
 domo.frustumCulled = false;
 domo.renderOrder = -10;
-domo.layers.enable(1); // el cielo entra en el reflejo (los edificios lo tapan)
+domo.layers.enable(1);
 scene.add(domo);
 
 // ---------------------------------------------------------------- superficie del agua
@@ -565,21 +783,17 @@ const aguaMat = new THREE.ShaderMaterial({
       d = normalize(vec2(-0.5, 0.85)); g += d * 0.05 * 0.62 * cos(dot(d, p) * 0.62 + t * 1.3);
       d = normalize(vec2(0.8, 0.6));   g += d * 0.025 * 1.1 * cos(dot(d, p) * 1.1 + t * 1.9);
       d = normalize(vec2(-0.9, 0.3));  g += d * 0.012 * 1.9 * cos(dot(d, p) * 1.9 + t * 2.6);
-      d = normalize(vec2(0.35, -0.9)); g += d * 0.006 * 3.3 * cos(dot(d, p) * 3.3 + t * 3.4);
-      // rizado fino por ruido (gradiente numérico)
       vec2 q = p * 0.8 + vec2(t * 0.25, -t * 0.4);
       float e = 0.15;
       float n0 = vnoise(q);
-      g += vec2(vnoise(q + vec2(e, 0.0)) - n0, vnoise(q + vec2(0.0, e)) - n0) / e * 0.06;
+      g += vec2(vnoise(q + vec2(e, 0.0)) - n0, vnoise(q + vec2(0.0, e)) - n0) / e * 0.05;
       return g;
     }
 
     void main() {
       vec3 V = normalize(cameraPosition - vWorld);
       float dist = distance(cameraPosition, vWorld);
-      // el oleaje fino se atenúa a lo lejos (sin aliasing)
       vec2 g = waveGrad(vWorld.xz, uTime) * uWave * mix(1.0, 0.35, smoothstep(150.0, 900.0, dist));
-
       float te = uTime - uEntryT;
       float dE = distance(vWorld.xz, uEntry.xz);
       float ringR = max(te, 0.0) * uRing.x;
@@ -601,20 +815,21 @@ const aguaMat = new THREE.ShaderMaterial({
       if (cameraPosition.y >= 0.0) {
         float fres = 0.02 + 0.98 * pow(1.0 - max(dot(N, V), 0.0), 5.0);
         col = vec3(0.001, 0.0015, 0.003);
-        // reflejo de la ciudad, los drones y el cable: desplazado por el oleaje y
-        // estirado en vertical (estelas de luz sobre el agua)
+        // agua calma: las luces se estiran en largas estelas verticales hacia el espectador
         vec2 uv = gl_FragCoord.xy / uRes;
         vec2 off = g * uDist * 7.0 * vec2(1.0, 1.6);
         vec3 refl = vec3(0.0);
-        // estelas verticales: más largas hacia el espectador, rotas por el rizado
-        float sm = 0.004 + 0.01 * smoothstep(40.0, 600.0, dist);
-        for (int k = -2; k <= 5; k++) {
+        float sm = 0.005 + 0.012 * smoothstep(40.0, 700.0, dist);
+        float wsum = 0.0;
+        for (int k = -2; k <= 9; k++) {
           float fk = float(k);
-          float jit = (vnoise(vec2(vWorld.x * 0.35, fk * 3.1 + uTime)) - 0.5) * 0.004;
-          refl += texture2D(uRefl, uv + off + vec2(jit, -fk * sm)).rgb * (1.0 - abs(fk - 1.5) / 5.0);
+          float jit = (vnoise(vec2(vWorld.x * 0.3, fk * 3.1 + uTime * 0.6)) - 0.5) * 0.003;
+          float wk = exp(-pow((fk - 2.0) / 5.0, 2.0));
+          refl += texture2D(uRefl, uv + off + vec2(jit, -fk * sm)).rgb * wk;
+          wsum += wk;
         }
-        refl /= 4.6;
-        col += refl * uReflI * (0.3 + 0.7 * fres);
+        refl /= wsum;
+        col += refl * uReflI * (0.35 + 0.65 * fres);
         col = mix(col, uHaze * 1.2, hazeAmount(vWorld) * 0.85);
         float cerca = smoothstep(2.6, 0.0, cameraPosition.y);
         col = mix(col, waterColorAt(-1.5), cerca * (1.0 - fres) * 0.9);
@@ -622,36 +837,32 @@ const aguaMat = new THREE.ShaderMaterial({
       } else {
         float cosT = -V.y;
         float win = smoothstep(0.6, 0.72, cosT);
+        // cerca de la costa iluminada, la superficie se ve más clara desde abajo
         col = mix(uFogTop * 0.75, uFogTop * 1.9 + uHaze * 2.0, win) + luz * 1.2;
-        // en el horizonte coincide con el fondo y con la niebla sobre el lecho
-        vec3 fogC = mix(waterColorAt(mix(cameraPosition.y, -uFondo, 0.5)),
-                        waterColorAt(cameraPosition.y) * 1.2, smoothstep(0.0, 0.7, -V.y));
+        vec3 fogC = mix(waterColorAt(mix(cameraPosition.y, -uFondo, 0.5)), waterColorAt(cameraPosition.y) * 1.2, smoothstep(0.0, 0.7, -V.y));
         col = mix(col, fogC, underFog(vWorld));
       }
       gl_FragColor = vec4(col, 1.0);
     }
   `,
 });
-const agua = new THREE.Mesh(new THREE.PlaneGeometry(14000, 14000), aguaMat);
+const agua = new THREE.Mesh(new THREE.PlaneGeometry(16000, 16000), aguaMat);
 agua.rotation.x = -Math.PI / 2;
 scene.add(agua);
 
-// ---------------------------------------------------------------- lecho marino
-const lechoGeo = new THREE.PlaneGeometry(320, 320, 260, 260);
+// ---------------------------------------------------------------- lecho: malla que acompaña a la cámara
+const PASO = 2.2;
+const LADO = 220;
+const lechoGeo = new THREE.PlaneGeometry(PASO * LADO, PASO * LADO, LADO, LADO);
 lechoGeo.rotateX(-Math.PI / 2);
-lechoGeo.translate(S.x - 20, 0, S.z + 20);
-{
-  const pos = lechoGeo.getAttribute("position");
-  for (let i = 0; i < pos.count; i++) pos.setY(i, seabedY(pos.getX(i), pos.getZ(i)));
-  lechoGeo.computeVertexNormals();
-}
-const pulso = C.submarino.pulso;
+const lechoBase = Float32Array.from(lechoGeo.getAttribute("position").array);
+const pulsoLecho = C.submarino.pulso;
 const lechoMat = new THREE.ShaderMaterial({
   uniforms: {
     ...U,
-    uS: { value: S },
+    uJ: { value: Jp },
     uAlbedo: { value: COL.lechoMarino },
-    uPulse: { value: new THREE.Vector3(0, 0, pulso.ancho) },
+    uPulse: { value: new THREE.Vector3(0, 0, pulsoLecho.ancho) },
   },
   vertexShader: /* glsl */ `
     varying vec3 vWorld;
@@ -665,20 +876,29 @@ const lechoMat = new THREE.ShaderMaterial({
   `,
   fragmentShader: /* glsl */ `
     ${COMMON}
-    uniform vec3 uS, uAlbedo, uPulse, uAzul, uHead;
-    uniform float uHeadI;
+    uniform vec3 uJ, uAlbedo, uPulse, uAzul, uHead, uPulsePos;
+    uniform float uHeadI, uPulseI;
     varying vec3 vWorld;
     varying vec3 vNormal;
     void main() {
-      vec3 N = normalize(vNormal);
-      float grano = 0.85 + 0.3 * vnoise(vWorld.xz * 3.1) * vnoise(vWorld.xz * 0.7 + 9.0);
+      // ondulaciones de arena y rocas finas por perturbación de normal
+      vec2 p = vWorld.xz;
+      float e = 0.2;
+      // ondulaciones irregulares: amplitud modulada por ruido para que no se vea un rayado
+      float am = smoothstep(0.35, 0.8, vnoise(p * 0.04 + 3.0)) * 0.05;
+      float h0 = sin(dot(p, vec2(0.55, 0.85)) * 2.6 + vnoise(p * 0.08) * 7.0) * am + vnoise(p * 0.45) * 0.22;
+      float hx = sin(dot(p + vec2(e, 0.0), vec2(0.55, 0.85)) * 2.6 + vnoise((p + vec2(e, 0.0)) * 0.08) * 7.0) * am + vnoise((p + vec2(e, 0.0)) * 0.45) * 0.22;
+      float hz = sin(dot(p + vec2(0.0, e), vec2(0.55, 0.85)) * 2.6 + vnoise((p + vec2(0.0, e)) * 0.08) * 7.0) * am + vnoise((p + vec2(0.0, e)) * 0.45) * 0.22;
+      vec3 N = normalize(normalize(vNormal) + vec3(-(hx - h0) / e, 0.0, -(hz - h0) / e) * 0.35);
+      float grano = 0.85 + 0.3 * vnoise(p * 3.1) * vnoise(p * 0.7 + 9.0);
       vec3 alb = uAlbedo * grano;
       vec3 L = uHead - vWorld;
       float d2 = dot(L, L);
-      float diff = max(dot(N, L * inversesqrt(d2)), 0.0);
-      vec3 luzHaz = mix(vec3(1.0), uAzul, 0.45) * uHeadI * 14.0 / (1.0 + d2 / 60.0);
-      vec3 col = alb * luzHaz * diff;
-      float dr = distance(vWorld.xz, uS.xz);
+      vec3 col = alb * mix(vec3(1.0), uAzul, 0.45) * uHeadI * 14.0 / (1.0 + d2 / 60.0) * max(dot(N, L * inversesqrt(d2)), 0.0);
+      vec3 Lp = uPulsePos - vWorld;
+      float dp2 = dot(Lp, Lp);
+      col += alb * mix(vec3(1.0), uAzul, 0.6) * uPulseI * 10.0 / (1.0 + dp2 / 50.0) * max(dot(N, Lp * inversesqrt(dp2)), 0.0);
+      float dr = distance(vWorld.xz, uJ.xz);
       float anillo = exp(-pow((dr - uPulse.x) / uPulse.z, 2.0)) * uPulse.y;
       col += (alb * 6.0 * (0.35 + 0.65 * max(N.y, 0.0)) + uAzul * 1.5) * uAzul * anillo;
       col += alb * uFogTop * 0.6 * max(N.y, 0.0);
@@ -687,63 +907,92 @@ const lechoMat = new THREE.ShaderMaterial({
     }
   `,
 });
-scene.add(new THREE.Mesh(lechoGeo, lechoMat));
-
-function updatePulso(t) {
-  const s = (t - T.pulso[0]) / (T.pulso[1] - T.pulso[0]);
+const lecho = new THREE.Mesh(lechoGeo, lechoMat);
+lecho.frustumCulled = false;
+scene.add(lecho);
+function updateLecho() {
+  // la malla se reubica en pasos enteros: los vértices caen siempre en los mismos puntos
+  const cx = Math.round(camera.position.x / PASO) * PASO;
+  const cz = Math.round(camera.position.z / PASO) * PASO;
+  const pos = lechoGeo.getAttribute("position");
+  const a = pos.array;
+  for (let i = 0; i < pos.count; i++) {
+    const x = lechoBase[i * 3] + cx;
+    const z = lechoBase[i * 3 + 2] + cz;
+    a[i * 3] = x;
+    a[i * 3 + 1] = seabedY(x, z);
+    a[i * 3 + 2] = z;
+  }
+  pos.needsUpdate = true;
+  lechoGeo.computeVertexNormals();
+}
+function updatePulsoLecho(t) {
+  const s = (t - T.pulsoUnion[0]) / (T.pulsoUnion[1] - T.pulsoUnion[0]);
   const v = lechoMat.uniforms.uPulse.value;
-  if (s <= 0) return v.set(0, 0, pulso.ancho);
-  v.x = pulso.radioMax * easeOutCubic(s);
-  v.y = (1 - clamp(s)) ** 1.6 * smoothstep(0, 0.05, t - T.pulso[0]) * 1.4;
-  v.z = pulso.ancho * (1 + 1.5 * clamp(s));
+  if (s <= 0) return v.set(0, 0, pulsoLecho.ancho);
+  v.x = pulsoLecho.radioMax * easeOutCubic(s);
+  v.y = (1 - clamp(s)) ** 1.6 * smoothstep(0, 0.05, t - T.pulsoUnion[0]) * 1.4;
+  v.z = pulsoLecho.ancho * (1 + 1.5 * clamp(s));
 }
 
-// ---------------------------------------------------------------- nieve marina
+// ---------------------------------------------------------------- nieve marina (volumen que envuelve a la cámara)
 const rndAgua = mulberry32(C.semilla + 101);
-const NS = C.submarino.nieve;
-const nievePos = new Float32Array(NS * 3);
-const nieveSeed = new Float32Array(NS);
-for (let i = 0; i < NS; i++) {
-  nievePos[i * 3] = lerp(E.x - 30, S.x + 25, rndAgua());
-  nievePos[i * 3 + 1] = lerp(-C.recorrido.profundidad - 2, -0.8, rndAgua() ** 0.85);
-  nievePos[i * 3 + 2] = lerp(S.z - 25, E.z + 40, rndAgua());
-  nieveSeed[i] = rndAgua();
-}
-const nieveGeo = new THREE.BufferGeometry();
-nieveGeo.setAttribute("position", new THREE.BufferAttribute(nievePos, 3));
-nieveGeo.setAttribute("aSeed", new THREE.BufferAttribute(nieveSeed, 1));
-const nieve = new THREE.Points(
+const NSN = C.submarino.nieve;
+const nieveGeo = new THREE.InstancedBufferGeometry();
+nieveGeo.index = quad.index;
+nieveGeo.setAttribute("position", quad.getAttribute("position"));
+const nSeed = new Float32Array(NSN * 4);
+for (let i = 0; i < NSN; i++) nSeed.set([rndAgua(), rndAgua(), rndAgua(), rndAgua()], i * 4);
+nieveGeo.setAttribute("aSeed", new THREE.InstancedBufferAttribute(nSeed, 4));
+nieveGeo.instanceCount = NSN;
+const nieve = new THREE.Mesh(
   nieveGeo,
   new THREE.ShaderMaterial({
     ...additive,
-    uniforms: { ...U, uS: { value: S }, uPulse: lechoMat.uniforms.uPulse },
+    uniforms: { ...U, uCaja: { value: new THREE.Vector3(80, 50, 80) } },
     vertexShader: /* glsl */ `
       ${COMMON}
-      attribute float aSeed;
-      uniform vec3 uHead, uS, uPulse;
-      uniform float uHeadI;
-      varying float vB;
+      attribute vec4 aSeed;
+      uniform vec3 uHead, uPulsePos, uCaja;
+      uniform float uHeadI, uPulseI;
+      uniform mat4 uPrevVP;
+      varying vec2 vLocal;
+      varying float vB, vR, vL;
       void main() {
-        vec3 p = position + vec3(sin(uTime * 0.25 + aSeed * 31.0) * 0.3,
-                                 sin(uTime * 0.18 + aSeed * 17.0) * 0.2 + uTime * 0.04,
-                                 cos(uTime * 0.22 + aSeed * 11.0) * 0.3);
+        vec3 base = aSeed.xyz * uCaja;
+        vec3 deriva = vec3(sin(uTime * 0.25 + aSeed.w * 31.0) * 0.3, uTime * 0.04, cos(uTime * 0.22 + aSeed.w * 11.0) * 0.3);
+        vec3 p = cameraPosition + mod(base + deriva - cameraPosition, uCaja) - uCaja * 0.5;
+        p.y = min(p.y, -0.3);
+        vec4 c = projectionMatrix * viewMatrix * vec4(p, 1.0);
+        vec4 cp = uPrevVP * vec4(p, 1.0);
+        vec2 sp = c.xy / c.w * 0.5 * uRes;
+        vec2 spp = cp.xy / cp.w * 0.5 * uRes;
+        vec2 vel = sp - spp;
+        float speed = length(vel);
+        vec2 dir = speed > 1e-3 ? vel / speed : vec2(1.0, 0.0);
+        vec2 perp = vec2(-dir.y, dir.x);
         float d = distance(p, cameraPosition);
+        float r = clamp((0.03 + 0.03 * aSeed.w) * uRes.y / (2.0 * d * uTanHalf), 0.7 * uDpr, 3.0 * uDpr);
+        float L = min(speed * 0.5, 4.0 * uDpr);
+        vLocal = vec2(position.x * (L + r * 2.0), position.y * r * 2.0);
+        vR = r;
+        vL = L;
         vec3 dh = p - uHead;
-        float luz = 0.12 + 0.1 * aSeed + uHeadI * 5.0 / (1.0 + dot(dh, dh) / 6.0);
-        float dr = distance(p.xz, uS.xz);
-        luz += uPulse.y * exp(-pow((dr - uPulse.x) / 2.5, 2.0)) * exp(-abs(p.y - uS.y) / 3.0) * 4.0;
-        vB = luz * smoothstep(0.6, 2.2, d) * (1.0 - underFog(p) * 0.8) * uUnder;
-        float px = (0.035 + 0.03 * aSeed) * uRes.y / (2.0 * d * uTanHalf);
-        gl_PointSize = clamp(px, 0.9 * uDpr, 3.2 * uDpr);
-        gl_Position = projectionMatrix * viewMatrix * vec4(p, 1.0);
+        vec3 dp = p - uPulsePos;
+        float luz = 0.06 + 0.06 * aSeed.w + uHeadI * 4.0 / (1.0 + dot(dh, dh) / 6.0) + uPulseI * 4.0 / (1.0 + dot(dp, dp) / 20.0);
+        vB = luz * smoothstep(0.6, 2.2, d) * (1.0 - underFog(p) * 0.8) * uUnder * sqrt(r / (r + L));
+        gl_Position = c;
+        gl_Position.xy += (dir * position.x * (L + r * 2.0) + perp * position.y * r * 2.0) / (0.5 * uRes) * c.w;
+        if (c.w <= 0.0 || cp.w <= 0.0) gl_Position = vec4(2.0, 2.0, 2.0, 1.0);
       }
     `,
     fragmentShader: /* glsl */ `
       uniform vec3 uAzul;
-      varying float vB;
+      varying vec2 vLocal;
+      varying float vB, vR, vL;
       void main() {
-        vec2 c = gl_PointCoord - 0.5;
-        float a = exp(-dot(c, c) * 14.0);
+        float dx = max(abs(vLocal.x) - vL, 0.0);
+        float a = exp(-(dx * dx + vLocal.y * vLocal.y) / (vR * vR));
         gl_FragColor = vec4(mix(vec3(0.75, 0.85, 0.95), uAzul, 0.35) * vB * a, 1.0);
       }
     `,
@@ -800,8 +1049,7 @@ const burbujas = new THREE.Mesh(
         float age = uTime - aParam.x;
         vec3 p = aOrigen + vec3(sin(age * 7.0 + aParam.w * 20.0) * 0.06, age * aParam.z, cos(age * 6.0 + aParam.w * 9.0) * 0.06);
         p.y = min(p.y, -0.05);
-        float vis = step(0.0, age) * smoothstep(0.0, 0.12, age) * (1.0 - smoothstep(1.6, 2.4, age))
-                  * (1.0 - smoothstep(-0.6, -0.1, p.y));
+        float vis = step(0.0, age) * smoothstep(0.0, 0.12, age) * (1.0 - smoothstep(1.6, 2.4, age)) * (1.0 - smoothstep(-0.6, -0.1, p.y));
         vec3 view = normalize(cameraPosition - p);
         vec3 right = normalize(cross(vec3(0.0, 1.0, 0.0), view));
         vec3 up = cross(view, right);
@@ -831,27 +1079,31 @@ burbujas.renderOrder = 6;
 scene.add(burbujas);
 
 // ---------------------------------------------------------------- haces de luz desde la superficie
-const NR = C.submarino.rayos;
+const NRY = C.submarino.rayos * 2;
 const rayGeo = new THREE.InstancedBufferGeometry();
 rayGeo.index = quad.index;
 rayGeo.setAttribute("position", quad.getAttribute("position"));
-const rRay = new Float32Array(NR * 4);
-const rTilt = new Float32Array(NR * 3);
-for (let i = 0; i < NR; i++) {
+const rRay = new Float32Array(NRY * 4);
+const rTilt = new Float32Array(NRY * 3);
+for (let i = 0; i < NRY; i++) {
+  // la mitad cerca del ingreso; la otra mitad frente a la ciudad B (luz de la costa)
+  const cerca = i < NRY / 2;
+  const cx = cerca ? E.x : 1080;
+  const cz = cerca ? E.z : -120;
   rRay.set(
     [
-      E.x + lerp(-16, 30, (i + rndAgua() * 0.6) / NR),
-      E.z + lerp(-40, 8, rndAgua()),
-      28 + rndAgua() * 18,
+      cx + lerp(-20, 30, rndAgua()),
+      cz + lerp(-40, 40, rndAgua()),
+      24 + rndAgua() * 16,
       0.8 + rndAgua() * 1.6,
     ],
     i * 4,
   );
-  rTilt.set([0.16, 0.1, rndAgua()], i * 3);
+  rTilt.set([cerca ? 0.16 : -0.2, 0.1, rndAgua()], i * 3);
 }
 rayGeo.setAttribute("aRay", new THREE.InstancedBufferAttribute(rRay, 4));
 rayGeo.setAttribute("aTilt", new THREE.InstancedBufferAttribute(rTilt, 3));
-rayGeo.instanceCount = NR;
+rayGeo.instanceCount = NRY;
 const rayos = new THREE.Mesh(
   rayGeo,
   new THREE.ShaderMaterial({
@@ -873,8 +1125,7 @@ const rayos = new THREE.Mesh(
         p += side * position.x * aRay.w * (0.7 + 0.9 * along / aRay.z);
         vUv = vec2(position.x, along / aRay.z);
         float depth = max(-cameraPosition.y, 0.0);
-        vB = uUnder * exp(-depth / 22.0) * (0.75 + 0.25 * sin(uTime * 0.7 + aTilt.z * 12.0))
-           * (1.0 - underFog(p) * 0.5);
+        vB = uUnder * exp(-depth / 22.0) * (0.75 + 0.25 * sin(uTime * 0.7 + aTilt.z * 12.0)) * (1.0 - underFog(p) * 0.5);
         gl_Position = projectionMatrix * viewMatrix * vec4(p, 1.0);
       }
     `,
@@ -897,13 +1148,40 @@ scene.add(rayos);
 function renderAt(time) {
   const t = clamp(Number(time) || 0, 0, C.duracion);
   U.uTime.value = t;
-  cameraAt(t);
+  cameraAt(Math.max(0, t - DT), camPrev);
+  U.uPrevVP.value.multiplyMatrices(camPrev.projectionMatrix, camPrev.matrixWorldInverse);
+  cameraAt(t, camera);
   domo.position.copy(camera.position);
-  U.uUnder.value = camera.position.y < 0 ? 1 : 0;
+  const bajo = camera.position.y < 0;
+  U.uUnder.value = bajo ? 1 : 0;
+  // profundidad de referencia del color del agua: la del lecho bajo la cámara
+  U.uFondo.value = Math.max(12, profundidad(camera.position.x));
+
   updatePunta(t);
   cable.update(t);
-  updatePulso(t);
-  drones.visible = t < T.convergencia[1] + 0.1;
+  updatePulsoLecho(t);
+  drones.visible = t > T.formacion[0] - 0.05 && t < T.picada[0] + 0.1;
+  ciudadA.group.visible = t < T.cruceCamara + 0.4;
+  ciudadB.group.visible = t > T.emersion - 1.2;
+  lecho.visible = bajo || camera.position.y < 3;
+  nieve.visible = bajo;
+  if (lecho.visible) updateLecho();
+
+  // empalme y pulso de datos
+  const on = smoothstep(T.llegadaUnion, T.llegadaUnion + 0.3, t);
+  empalmeMat.uniforms.uOn.value = on * (0.6 + 0.4 * Math.exp(-(t - T.llegadaUnion) / 0.6));
+  const sp = pulsoS(t);
+  const viajando = t > T.viaje[0] && t < T.conexion + 0.4;
+  troncal.puntoEn(sp, U.uPulsePos.value);
+  U.uPulseI.value = viajando
+    ? smoothstep(T.viaje[0], T.viaje[0] + 0.5, t) *
+      (1 - smoothstep(T.conexion, T.conexion + 0.4, t))
+    : 0;
+  troncal.mat.uniforms.uFlujo.value.set(sJ, sp, U.uPulseI.value, on);
+  // estación de amarre y ola de encendido de la ciudad B
+  estacionMat.uniforms.uOn.value = smoothstep(T.conexion - 0.1, T.conexion + 0.3, t);
+  const [o0, o1] = T.ondaCiudad;
+  ciudadB.awake.z = t < o0 ? 0 : lerp(0, 2800, easeOutCubic((t - o0) / (o1 - o0)));
 
   if (camera.position.y > -0.05) {
     mirrorCam.projectionMatrix.copy(camera.projectionMatrix);
@@ -914,11 +1192,11 @@ function renderAt(time) {
     U.uDpr.value = DPR * 0.5;
     U.uRes.value.set(rtW, rtH);
     // la cámara espejada invierte el sentido de las caras: se dibujan las visibles
-    for (const m of ciudad.unaCara) m.side = THREE.BackSide;
+    for (const m of unaCara) m.side = THREE.BackSide;
     renderer.setRenderTarget(reflectRT);
     renderer.clear();
     renderer.render(scene, mirrorCam);
-    for (const m of ciudad.unaCara) m.side = THREE.FrontSide;
+    for (const m of unaCara) m.side = THREE.FrontSide;
     U.uReflectPass.value = 0;
     U.uDpr.value = DPR;
     U.uRes.value.set(W * DPR, H * DPR);
@@ -929,12 +1207,40 @@ function renderAt(time) {
 window.addEventListener("hf-seek", (e) => renderAt(e.detail.time));
 renderAt(window.__hfThreeTime || 0);
 
-// Diagnóstico para revisión (no afecta al render).
+// Diagnóstico para revisión (no afecta al render): proyecta puntos clave a pantalla.
+const _p = new THREE.Vector3();
+function proyectar(t) {
+  const cam = camera.clone();
+  cameraAt(t, cam);
+  cam.updateProjectionMatrix();
+  const pr = (v) => {
+    _p.copy(v).project(cam);
+    return [
+      +(((_p.x + 1) / 2) * 100).toFixed(0),
+      +(((1 - _p.y) / 2) * 100).toFixed(0),
+      _p.z < 1 ? "" : "detrás",
+    ];
+  };
+  const punta = headAt(t, new THREE.Vector3());
+  const pulso = troncal.puntoEn(pulsoS(t), new THREE.Vector3());
+  return {
+    t,
+    cam: cam.position.toArray().map((x) => +x.toFixed(1)),
+    logo: pr(K),
+    torre: pr(O),
+    punta: pr(punta),
+    puntaPos: punta.toArray().map((x) => +x.toFixed(1)),
+    empalme: pr(Jp),
+    pulso: pr(pulso),
+    pulsoPos: pulso.toArray().map((x) => +x.toFixed(0)),
+    amarre: pr(V3(B.amarre)),
+    lecho: +seabedY(cam.position.x, cam.position.z).toFixed(1),
+  };
+}
 window.__cirion = {
   drones: N,
-  edificios: ciudad.edificios,
-  luces: ciudad.luces,
+  edificios: ciudadA.edificios + ciudadB.edificios,
+  troncal: Math.round(troncal.largo),
   renderAt,
-  K: K.toArray(),
-  S: S.toArray(),
+  proyectar,
 };

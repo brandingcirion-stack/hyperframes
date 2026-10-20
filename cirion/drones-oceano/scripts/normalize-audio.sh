@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Lleva la banda sonora a −16 LUFS integrados con ganancia LINEAL (conserva la dinámica
 # diseñada: textura → ascenso → picada → plano amortiguado → pulso) y un limitador
-# de picos que deja el pico verdadero por debajo de −1 dBTP. Codifica en AAC 192 kbps.
+# de picos que deja el pico verdadero por debajo de −1 dBTP. Codifica en AAC 160 kbps (queda bajo el límite de 500 KB del repo).
 # (loudnorm en modo dinámico aplana la curva cuando no puede aplicar ganancia lineal.)
 # Un pasa-altos a 28 Hz quita energía infrasónica que el AAC convertía en sobrepicos.
 # Uso: bash scripts/normalize-audio.sh   (después de node scripts/synth-audio.mjs)
@@ -18,7 +18,7 @@ GAIN=$(echo "$TARGET - $(integrated "$IN")" | bc -l)
 for _ in 1 2; do
   ffmpeg -y -loglevel error -i "$IN" \
     -af "highpass=f=28,volume=${GAIN}dB,alimiter=limit=${LIMIT}:attack=2:release=60:level=disabled,aresample=48000" \
-    -c:a aac -b:a 192k "$OUT"
+    -c:a aac -b:a 160k "$OUT"
   # el limitador resta algo de sonoridad: corrige la ganancia una vez
   GAIN=$(echo "$GAIN + ($TARGET - $(integrated "$OUT"))" | bc -l)
 done
