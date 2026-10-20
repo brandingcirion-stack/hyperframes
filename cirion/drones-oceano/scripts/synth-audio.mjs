@@ -1,7 +1,8 @@
-// Banda sonora procedural (estéreo, 48 kHz): ciudad y bahía nocturnas, show de drones,
-// cable que sube al logo, picada, empalme en el lecho, recorrido y conexión con la ciudad B.
+// Banda sonora procedural (estéreo, 48 kHz, 12 s): ciudad y bahía nocturnas, show de
+// drones, picada del cable, ingreso al agua, descenso y pulso en el lecho.
 // Síntesis determinista con semilla: no usa muestras ni pistas de terceros.
-// Lee los tiempos de src/config.js para quedar sincronizada con la imagen.
+// Lee los tiempos de src/config.js para quedar
+// sincronizada con la imagen.
 // Uso: node scripts/synth-audio.mjs   → assets/audio/banda-sonora.raw.wav
 //      bash scripts/normalize-audio.sh → assets/audio/banda-sonora.m4a (−16 LUFS, AAC)
 import { writeFileSync } from "node:fs";
@@ -91,215 +92,166 @@ function pinkNoise(rnd) {
 const ts = (i) => i / SR;
 const range = (a, b) => [Math.max(0, Math.floor(a * SR)), Math.min(N, Math.ceil(b * SR))];
 
-// ---------------------------------------------------------------- utilidades de eventos
-// Barrido de ruido filtrado: frecuencia central f(t), envolvente env(t) y paneo pan(t).
-function barrido(b, send, sendAmt, t0, t1, f, q, env, pan, semilla) {
-  const [ia, ib] = range(t0, t1);
-  const rnd = mulberry32(CONFIG.semilla + semilla);
-  const bp = [new Biquad(), new Biquad()];
-  for (let i = ia; i < ib; i++) {
+// ---------------------------------------------------------------- 1. océano nocturno
+for (const [ch, pan, fase] of [
+  [0, -0.6, 0],
+  [1, 0.6, 1.7],
+]) {
+  const rnd = mulberry32(CONFIG.semilla + 11 + ch);
+  const pink = pinkNoise(rnd);
+  const lp = new Biquad().set("lp", 650, 0.6);
+  const foam = new Biquad().set("bp", 3200, 0.6);
+  for (let i = 0; i < N; i++) {
     const t = ts(i);
-    if ((i - ia) % 32 === 0) {
-      const fc = f(t);
-      bp[0].set("bp", fc, q);
-      bp[1].set("bp", fc * 1.05, q);
-    }
-    const e = env(t);
-    const pn = pan(t);
-    put(b, send, i, bp[0].run(rnd() * 2 - 1) * e, pn - 0.2, sendAmt);
-    put(b, send, i, bp[1].run(rnd() * 2 - 1) * e, pn + 0.2, sendAmt);
+    const swell = 0.5 + 0.5 * Math.sin((Math.PI * (t + fase)) / 3.4) ** 2;
+    const n = pink();
+    const v = lp.run(n) * 0.36 * swell + foam.run(rnd() * 2 - 1) * 0.022 * swell ** 3;
+    const env = smoothstep(0, 1.0, t) * lerp(1, 0.55, smoothstep(T.picada[0], T.cruceCamara, t));
+    put(sup, null, i, v * env, pan);
   }
 }
-// Campana suave (parciales inarmónicos con caída exponencial).
-function campana(b, send, sendAmt, t0, f, amp, pan, caida = 1.2) {
-  const [ia, ib] = range(t0, t0 + caida * 4);
-  const parciales = [
-    [1, 1],
-    [2.01, 0.45],
-    [3.0, 0.25],
-    [4.17, 0.12],
-  ];
-  for (let i = ia; i < ib; i++) {
-    const t = ts(i) - t0;
-    const att = 1 - Math.exp(-t / 0.004);
-    let v = 0;
-    for (const [m, g] of parciales) v += Math.sin(TAU * f * m * t) * g * Math.exp(-t / (caida / m));
-    put(b, send, i, v * amp * att, pan, sendAmt);
+
+// ---------------------------------------------------------------- 1b. ciudad lejana al otro lado de la bahía
+// Rumor de tránsito (banda media difusa) y zumbido urbano grave, muy por debajo del agua.
+for (const [ch, pan] of [
+  [0, -0.35],
+  [1, 0.35],
+]) {
+  const rnd = mulberry32(CONFIG.semilla + 21 + ch);
+  const pink = pinkNoise(rnd);
+  const bp = new Biquad().set("bp", 420, 0.5);
+  const lp = new Biquad().set("lp", 160, 0.7);
+  for (let i = 0; i < N; i++) {
+    const t = ts(i);
+    const ola = 0.75 + 0.25 * Math.sin(TAU * 0.11 * t + ch * 2.1);
+    const n = pink();
+    const v = bp.run(n) * 0.11 * ola + lp.run(n) * 0.16;
+    const env = smoothstep(0, 1.0, t) * (1 - smoothstep(T.picada[0], T.cruceCamara, t) * 0.85);
+    put(sup, null, i, v * env, pan);
   }
 }
-// Golpe grave contenido (seno con caída de tono) + cuerpo de ruido filtrado.
-function golpe(b, send, sendAmt, t0, amp, fBase, semilla, caida = 0.8) {
-  const [ia, ib] = range(t0, t0 + caida * 5);
-  const rnd = mulberry32(CONFIG.semilla + semilla);
-  const lp = new Biquad().set("lp", 260, 0.7);
-  let ph = 0;
-  for (let i = ia; i < ib; i++) {
-    const t = ts(i) - t0;
-    ph += (TAU * (fBase + 22 * Math.exp(-t / 0.06))) / SR;
-    const att = 1 - Math.exp(-t / 0.012);
-    const v =
-      Math.sin(ph) * att * Math.exp(-t / caida) * 0.32 +
-      Math.sin(ph * 2) * att * Math.exp(-t / (caida * 0.5)) * 0.09 +
-      lp.run(rnd() * 2 - 1) * (1 - Math.exp(-t / 0.05)) * Math.exp(-t / (caida * 0.6)) * 0.35;
-    put(b, send, i, v * amp, 0, sendAmt);
-  }
-}
-// Pad de parciales con desafinación estéreo.
-function pad(b, send, sendAmt, t0, t1, notas, ampFn, brilloFn) {
-  const [ia, ib] = range(t0, t1);
+
+// ---------------------------------------------------------------- 2. textura tonal (formación y sostén)
+{
+  const notas = [73.42, 110, 146.83, 164.81, 220, 329.63]; // Re sus2 abierto
   const voces = [
     [-6, -0.45],
     [0, 0],
     [6, 0.45],
   ];
+  const [a, b] = range(0, T.picada[1] + 0.6);
   for (const [k, f] of notas.entries()) {
     for (const [cents, pan] of voces) {
       const fd = f * 2 ** (cents / 1200);
       const ph0 = (k * 0.37 + cents * 0.01) % 1;
-      for (let i = ia; i < ib; i++) {
+      for (let i = a; i < b; i++) {
         const t = ts(i);
-        const br = brilloFn(t);
+        const crece =
+          smoothstep(0.2, T.formacion[1] + 0.2, t) ** 1.5 * 0.75 + 0.25 * smoothstep(3, 5, t);
+        const sale = 1 - smoothstep(6.0, T.picada[1] + 0.5, t) * 0.92;
+        const brillo = 0.3 + 0.7 * smoothstep(0.5, 4.5, t);
+        // leve respiración de los parciales altos
         const resp = 0.85 + 0.15 * Math.sin(TAU * 0.23 * t + k);
         let v = 0;
         for (let h = 1; h <= 5; h++) {
           v +=
             (Math.sin(TAU * fd * h * t + ph0 * h * TAU) / h ** 1.5) *
-            (h === 1 ? 1 : (br * resp) ** (h - 1));
+            (h === 1 ? 1 : (brillo * resp) ** (h - 1));
         }
-        put(b, send, i, v * ampFn(t) * (f > 300 ? 0.55 : 1), pan, sendAmt);
+        const amp = (k >= 4 ? 0.0065 : 0.012) * crece * sale;
+        put(sup, rev, i, v * amp, pan, 0.45);
       }
     }
   }
 }
-// Ambiente urbano: rumor de tránsito (banda media) y zumbido grave, decorrelacionado L/R.
-function ambiente(b, t0, t1, fBanda, amp, envFn, semilla) {
-  const [ia, ib] = range(t0, t1);
-  for (const [ch, pan] of [
-    [0, -0.4],
-    [1, 0.4],
-  ]) {
-    const rnd = mulberry32(CONFIG.semilla + semilla + ch);
-    const pink = pinkNoise(rnd);
-    const bp = new Biquad().set("bp", fBanda, 0.5);
-    const lp = new Biquad().set("lp", 160, 0.7);
-    const agua = new Biquad().set("lp", 600, 0.6);
-    for (let i = ia; i < ib; i++) {
-      const t = ts(i);
-      const ola = 0.5 + 0.5 * Math.sin((Math.PI * (t + ch * 1.7)) / 3.4) ** 2;
-      const n = pink();
-      const v = bp.run(n) * 0.11 + lp.run(n) * 0.16 + agua.run(pink()) * 0.22 * ola;
-      put(b, null, i, v * amp * envFn(t), pan);
-    }
-  }
-}
 
-// ---------------------------------------------------------------- 1. ciudad A y bahía
-ambiente(
-  sup,
-  0,
-  T.cruceCamara + 0.6,
-  420,
-  1,
-  (t) => smoothstep(0, 1, t) * (1 - smoothstep(T.picada[0], T.cruceCamara, t) * 0.8),
-  21,
-);
-
-// ---------------------------------------------------------------- 2. textura tonal: formación, paneo, subida del cable
+// ---------------------------------------------------------------- 3. ascenso de energía (convergencia)
 {
-  const re = [73.42, 110, 146.83, 164.81, 220, 329.63]; // Re sus2 abierto
-  pad(
-    sup,
-    rev,
-    0.45,
-    0.2,
-    T.picada[1] + 0.6,
-    re,
-    (t) =>
-      0.012 *
-      (smoothstep(0.2, T.formacion[1], t) ** 1.4 * 0.7 +
-        0.3 * smoothstep(T.paneo[0], T.paneo[1], t)) *
-      (1 - smoothstep(T.compresion[0], T.picada[1] + 0.5, t) * 0.92),
-    (t) => 0.3 + 0.7 * smoothstep(0.5, T.cableSube[1], t),
-  );
-}
-
-// ---------------------------------------------------------------- 3. el cable sale de la torre y sube al logo
-barrido(
-  sup,
-  rev,
-  0.25,
-  T.cableSube[0] - 0.1,
-  T.cableSube[1] + 0.05,
-  (t) => 300 * 7 ** smoothstep(T.cableSube[0], T.cableSube[1], t),
-  2.2,
-  (t) =>
-    0.32 *
-    smoothstep(T.cableSube[0] - 0.1, T.cableSube[0] + 0.4, t) *
-    (0.4 + 0.6 * smoothstep(T.cableSube[0], T.cableSube[1], t)) *
-    (1 - smoothstep(T.cableSube[1] - 0.05, T.cableSube[1] + 0.05, t)),
-  () => 0.1,
-  31,
-);
-{
-  // zumbido eléctrico que sube de tono con el cable
-  const [ia, ib] = range(T.cableSube[0], T.cableSube[1] + 0.3);
+  const [a, b] = range(T.convergencia[0], T.picada[0] + 0.4);
+  const bpL = new Biquad();
+  const bpR = new Biquad();
+  const rnd = mulberry32(CONFIG.semilla + 31);
   let ph = 0;
-  for (let i = ia; i < ib; i++) {
+  let trem = 0;
+  for (let i = a; i < b; i++) {
     const t = ts(i);
-    const s = smoothstep(T.cableSube[0], T.cableSube[1], t);
-    ph += (TAU * (110 + 110 * s)) / SR;
-    const e =
-      smoothstep(T.cableSube[0], T.cableSube[0] + 0.3, t) *
-      (1 - smoothstep(T.cableSube[1], T.cableSube[1] + 0.3, t));
-    const v = (Math.sin(ph) * 0.5 + Math.sin(ph * 3) * 0.2 + Math.sin(ph * 5) * 0.08) * e * 0.03;
-    put(sup, rev, i, v, 0.1, 0.2);
+    const s = clamp((t - T.convergencia[0]) / (T.picada[0] - T.convergencia[0]));
+    if ((i - a) % 32 === 0) {
+      const fc = 250 * 12 ** (s ** 1.5);
+      bpL.set("bp", fc, 4);
+      bpR.set("bp", fc * 1.04, 4);
+    }
+    // se funde con la picada (sin corte): la corriente ya se mueve cuando empieza a caer
+    const corte = 1 - smoothstep(T.picada[0] - 0.25, T.picada[0] + 0.35, t);
+    const env = s ** 2.2 * corte * 0.6; // sube sin tapar la picada ni el ingreso al agua
+    const nL = bpL.run(rnd() * 2 - 1);
+    const nR = bpR.run(rnd() * 2 - 1);
+    const f = 110 * 3 ** (s ** 1.4);
+    ph += (TAU * f) / SR;
+    trem += (TAU * lerp(3, 14, s)) / SR;
+    const tono = Math.sin(ph) * (0.75 + 0.25 * Math.sin(trem));
+    const sub = Math.sin((TAU * 55 * t) % TAU);
+    put(sup, rev, i, nL * env * 0.8 + tono * env * 0.07 + sub * env * 0.07, -0.25, 0.2);
+    put(sup, rev, i, nR * env * 0.8 + tono * env * 0.07 + sub * env * 0.07, 0.25, 0.2);
   }
 }
 
-// ---------------------------------------------------------------- 4. contacto con el logo y transformación
-golpe(sup, rev, 0.4, T.contacto, 0.7, 48, 41, 0.7);
-campana(sup, rev, 0.6, T.contacto + 0.01, 587.33, 0.03, -0.2, 1.4);
-campana(sup, rev, 0.6, T.contacto + 0.06, 880, 0.02, 0.25, 1.1);
-barrido(
-  sup,
-  rev,
-  0.2,
-  T.contacto + 0.1,
-  T.picada[0] + 0.02,
-  (t) => 250 * 12 ** (smoothstep(T.contacto, T.picada[0], t) ** 1.5),
-  4,
-  (t) =>
-    0.75 *
-    smoothstep(T.contacto, T.picada[0], t) ** 2.2 *
-    (1 - smoothstep(T.picada[0] - 0.03, T.picada[0] + 0.02, t)),
-  () => 0,
-  43,
-);
+// ---------------------------------------------------------------- 4. picada (desplazamiento sincronizado)
+{
+  const [t0, t1] = T.picada;
+  const [a, b] = range(t0 - 0.15, t1 + 0.05);
+  const bp = [new Biquad(), new Biquad()];
+  const rnd = mulberry32(CONFIG.semilla + 41);
+  let ph = 0;
+  for (let i = a; i < b; i++) {
+    const t = ts(i);
+    const s = clamp((t - t0) / (t1 - t0));
+    if ((i - a) % 32 === 0) {
+      const fc = 2600 * (350 / 2600) ** s;
+      bp[0].set("bp", fc, 1.3);
+      bp[1].set("bp", fc * 1.06, 1.3);
+    }
+    const env =
+      (0.15 + 0.85 * s ** 1.5) *
+      (1 - smoothstep(t1 - 0.01, t1 + 0.04, t)) *
+      smoothstep(t0 - 0.15, t0 + 0.45, t);
+    ph += (TAU * lerp(900, 240, s ** 0.8)) / SR;
+    const pan = lerp(0, 0.3, s); // el haz cruza hacia la derecha del cuadro
+    put(
+      sup,
+      rev,
+      i,
+      bp[0].run(rnd() * 2 - 1) * env * 0.9 + Math.sin(ph) * env * 0.035,
+      pan - 0.15,
+      0.15,
+    );
+    put(
+      sup,
+      rev,
+      i,
+      bp[1].run(rnd() * 2 - 1) * env * 0.9 + Math.sin(ph) * env * 0.035,
+      pan + 0.15,
+      0.15,
+    );
+  }
+}
 
-// ---------------------------------------------------------------- 5. picada: desplazamiento descendente hacia la derecha
-barrido(
-  sup,
-  rev,
-  0.15,
-  T.picada[0],
-  T.picada[1] + 0.05,
-  (t) => 2600 * (350 / 2600) ** ((t - T.picada[0]) / (T.picada[1] - T.picada[0])),
-  1.3,
-  (t) =>
-    0.9 *
-    (0.15 + 0.85 * clamp((t - T.picada[0]) / (T.picada[1] - T.picada[0])) ** 1.5) *
-    (1 - smoothstep(T.picada[1] - 0.01, T.picada[1] + 0.04, t)) *
-    smoothstep(T.picada[0], T.picada[0] + 0.08, t),
-  (t) => lerp(0, 0.45, clamp((t - T.picada[0]) / (T.picada[1] - T.picada[0]))),
-  51,
-);
-
-// ---------------------------------------------------------------- 6. ingreso al agua: golpe sordo y burbujas
+// ---------------------------------------------------------------- 5. ingreso al agua: golpe sordo y burbujas
 {
   const te = T.picada[1];
-  golpe(agua, revAgua, 0.35, te, 1.0, 40, 61, 0.45);
-  const rnd = mulberry32(CONFIG.semilla + 62);
-  for (let k = 0; k < 8; k++) {
+  const [a, b] = range(te, te + 1.4);
+  const rnd = mulberry32(CONFIG.semilla + 51);
+  const lp = new Biquad().set("lp", 480, 0.7);
+  let ph = 0;
+  for (let i = a; i < b; i++) {
+    const t = ts(i) - te;
+    ph += (TAU * (40 + 40 * Math.exp(-t / 0.08))) / SR;
+    const env = Math.exp(-t / 0.45) * (1 - Math.exp(-t / 0.006));
+    const v = Math.sin(ph) * env * 0.42 + lp.run(rnd() * 2 - 1) * Math.exp(-t / 0.16) * 0.5;
+    put(agua, revAgua, i, v, 0.15, 0.35);
+  }
+  const burbujas = 8;
+  for (let k = 0; k < burbujas; k++) {
     const t0 = te + 0.06 + k * 0.075 + rnd() * 0.05;
     const f0 = 380 + rnd() * 380;
     const pan = (rnd() - 0.5) * 0.8;
@@ -315,170 +267,99 @@ barrido(
   }
 }
 
-// ---------------------------------------------------------------- 7. bajo el agua: presión, dron grave, zumbido del cable
+// ---------------------------------------------------------------- 6. lecho submarino
 {
-  const t0 = T.picada[1] + 0.05;
-  const t1 = T.emersion + 0.3;
-  const [ia, ib] = range(t0, t1);
-  const rnd = mulberry32(CONFIG.semilla + 71);
+  const [a, b] = range(T.picada[1] + 0.05, DUR);
+  const rnd = mulberry32(CONFIG.semilla + 61);
   const lp = [new Biquad().set("lp", 170, 0.7), new Biquad().set("lp", 160, 0.7)];
-  const brown = [0, 0];
-  for (let i = ia; i < ib; i++) {
+  const swish = [new Biquad(), new Biquad()];
+  let brown = [0, 0];
+  for (let i = a; i < b; i++) {
     const t = ts(i);
-    const env =
-      smoothstep(T.picada[1], T.cruceCamara + 0.3, t) *
-      (1 - smoothstep(T.emersion - 0.1, T.emersion + 0.3, t));
+    const entra = smoothstep(T.picada[1], T.cruceCamara + 0.3, t);
+    const prof = smoothstep(T.cruceCamara, T.llegadaFondo, t);
+    // presión: ruido marrón muy grave
     for (const ch of [0, 1]) {
       brown[ch] = clamp(brown[ch] * 0.995 + (rnd() * 2 - 1) * 0.04, -1, 1);
-      put(agua, null, i, lp[ch].run(brown[ch]) * 0.3 * env, ch ? 0.5 : -0.5);
+      const v = lp[ch].run(brown[ch]) * 0.3 * entra;
+      put(agua, null, i, v, ch ? 0.5 : -0.5);
     }
-    const vL = Math.sin(TAU * 55 * t) * 0.03 + Math.sin(TAU * 82.4 * t) * 0.02;
-    const vR = Math.sin(TAU * 55.15 * t) * 0.03 + Math.sin(TAU * 82.55 * t) * 0.02;
+    // dron tonal oscuro, con batido lento entre canales
+    const dark = lerp(1, 0.7, prof);
+    const vL = Math.sin(TAU * 55 * dark * t) * 0.03 + Math.sin(TAU * 82.4 * dark * t) * 0.02;
+    const vR = Math.sin(TAU * 55.15 * dark * t) * 0.03 + Math.sin(TAU * 82.55 * dark * t) * 0.02;
+    const env = entra * (1 - 0.4 * smoothstep(T.llegadaFondo, DUR, t));
     put(agua, null, i, vL * env, -0.4);
     put(agua, null, i, vR * env, 0.4);
-    // zumbido eléctrico del cable mientras desciende
-    const ez =
+    // desplazamiento amortiguado mientras desciende la cámara
+    if (t < T.llegadaFondo + 0.2) {
+      if ((i - a) % 32 === 0) {
+        const fc = 900 * (220 / 900) ** prof;
+        swish[0].set("bp", fc, 0.9);
+        swish[1].set("bp", fc * 1.05, 0.9);
+      }
+      const e =
+        entra *
+        (0.5 + 0.5 * Math.sin(Math.PI * prof)) *
+        (1 - smoothstep(T.llegadaFondo - 0.3, T.llegadaFondo + 0.2, t));
+      put(agua, revAgua, i, swish[0].run(rnd() * 2 - 1) * e * 0.2, -0.3, 0.2);
+      put(agua, revAgua, i, swish[1].run(rnd() * 2 - 1) * e * 0.2, 0.3, 0.2);
+    }
+  }
+}
+
+// ---------------------------------------------------------------- 6b. zumbido eléctrico del cable al descender
+{
+  const [a, b] = range(T.picada[1], T.llegadaFondo + 1.2);
+  const lp = [new Biquad().set("lp", 700, 0.7), new Biquad().set("lp", 650, 0.7)];
+  for (let i = a; i < b; i++) {
+    const t = ts(i);
+    const env =
       smoothstep(T.picada[1], T.cruceCamara + 0.4, t) *
-      (1 - smoothstep(T.llegadaUnion, T.llegadaUnion + 0.6, t));
-    let h = 0;
-    for (const [m, g] of [
-      [1, 0.5],
-      [3, 0.35],
-      [5, 0.2],
-    ]) {
-      h += Math.sin(TAU * 60 * m * t) * g;
+      (1 - smoothstep(T.llegadaFondo, T.llegadaFondo + 1.2, t));
+    // armónicos impares de 60 Hz, con leve vibrato distinto por canal (sin batidos extremos)
+    for (const ch of [0, 1]) {
+      const f = 60 * (1 + 0.002 * Math.sin(TAU * (0.7 + ch * 0.2) * t));
+      let v = 0;
+      for (const [h, g] of [
+        [1, 0.5],
+        [3, 0.35],
+        [5, 0.2],
+        [7, 0.1],
+      ]) {
+        v += Math.sin(TAU * f * h * t) * g;
+      }
+      put(agua, null, i, lp[ch].run(v) * 0.018 * env, ch ? 0.3 : -0.3);
     }
-    put(agua, null, i, h * 0.014 * ez, 0);
   }
 }
 
-// ---------------------------------------------------------------- 8. empalme: cierre metálico contenido y pulso
+// ---------------------------------------------------------------- 7. pulso grave al llegar al fondo
 {
-  const tu = T.llegadaUnion;
-  const [ia, ib] = range(tu, tu + 1.2);
-  const rnd = mulberry32(CONFIG.semilla + 81);
-  const bp1 = new Biquad().set("bp", 520, 9);
-  const bp2 = new Biquad().set("bp", 1310, 12);
-  for (let i = ia; i < ib; i++) {
-    const t = ts(i) - tu;
-    const x = (rnd() * 2 - 1) * Math.exp(-t / 0.012);
-    const v = bp1.run(x) * 2.4 * Math.exp(-t / 0.35) + bp2.run(x) * 1.2 * Math.exp(-t / 0.2);
-    put(agua, revAgua, i, v * 0.18, 0.15, 0.5);
+  const t0 = T.llegadaFondo;
+  const [a, b] = range(t0, DUR);
+  const rnd = mulberry32(CONFIG.semilla + 71);
+  const lp = new Biquad().set("lp", 260, 0.7);
+  let ph = 0;
+  let ph2 = 0;
+  for (let i = a; i < b; i++) {
+    const t = ts(i) - t0;
+    ph += (TAU * (42 + 22 * Math.exp(-t / 0.06))) / SR;
+    ph2 += (TAU * 84) / SR;
+    const att = 1 - Math.exp(-t / 0.012);
+    const v =
+      Math.sin(ph) * att * Math.exp(-t / 0.9) * 0.3 +
+      Math.sin(ph2) * att * Math.exp(-t / 0.45) * 0.09 +
+      Math.sin(ph2 * 1.5) * att * Math.exp(-t / 0.3) * 0.03 +
+      lp.run(rnd() * 2 - 1) * (1 - Math.exp(-t / 0.05)) * Math.exp(-t / 0.55) * 0.35;
+    put(agua, revAgua, i, v, 0, 0.6);
+    // resolución tonal muy baja y amortiguada (Re + La), cola suave
+    const pad =
+      (Math.sin(TAU * 73.42 * ts(i)) + 0.6 * Math.sin(TAU * 110 * ts(i))) *
+      smoothstep(0.05, 0.6, t) *
+      0.02;
+    put(agua, revAgua, i, pad, 0, 0.5);
   }
-  golpe(agua, revAgua, 0.6, tu + 0.04, 1.1, 42, 82, 0.9);
-  campana(agua, revAgua, 0.6, tu + 0.08, 293.66, 0.035, 0, 1.6);
-}
-
-// ---------------------------------------------------------------- 9. recorrido: flujo de datos y agua que corre
-{
-  const [v0, v1] = T.viaje;
-  // agua que corre: la velocidad abre el filtro
-  barrido(
-    agua,
-    revAgua,
-    0.15,
-    v0,
-    T.emersion + 0.2,
-    (t) => 220 + 900 * smoothstep(v0, v0 + 2.2, t),
-    0.9,
-    (t) =>
-      (0.12 + 0.1 * smoothstep(v0 + 2, T.emersion, t)) *
-      smoothstep(v0, v0 + 1.6, t) *
-      (1 - smoothstep(T.emersion - 0.2, T.emersion + 0.2, t)),
-    (t) => 0.25 * Math.sin(t * 0.9),
-    91,
-  );
-  // pulsos de datos: tonos breves y amortiguados, cada vez más seguidos
-  const rnd = mulberry32(CONFIG.semilla + 92);
-  let t = v0 + 0.4;
-  let k = 0;
-  const lp = new Biquad().set("lp", 1400, 0.7);
-  while (t < Math.min(v1, T.emersion + 0.2)) {
-    const f = [587.33, 659.25, 880, 739.99][k % 4] * (rnd() < 0.2 ? 0.5 : 1);
-    const [ia, ib] = range(t, t + 0.18);
-    const amp =
-      0.035 * smoothstep(v0, v0 + 1.2, t) * (0.7 + 0.3 * smoothstep(v0 + 2, T.emersion, t));
-    const pan = Math.sin(k * 1.3) * 0.35;
-    for (let i = ia; i < ib; i++) {
-      const tt = ts(i) - t;
-      put(agua, revAgua, i, lp.run(Math.sin(TAU * f * tt) * Math.exp(-tt / 0.05)) * amp, pan, 0.35);
-    }
-    const ritmo = lerp(0.26, 0.13, smoothstep(v0, T.emersion, t));
-    t += ritmo;
-    k++;
-  }
-  // dron que crece hacia la emersión
-  pad(
-    agua,
-    revAgua,
-    0.3,
-    v0,
-    T.emersion + 0.3,
-    [73.42, 110, 146.83],
-    (tt) =>
-      0.012 * smoothstep(v0, T.emersion, tt) * (1 - smoothstep(T.emersion, T.emersion + 0.3, tt)),
-    () => 0.4,
-  );
-}
-
-// ---------------------------------------------------------------- 10. emersión y ciudad B
-barrido(
-  sup,
-  rev,
-  0.2,
-  T.emersion - 0.25,
-  T.emersion + 0.6,
-  (t) => 400 * 6 ** smoothstep(T.emersion - 0.25, T.emersion + 0.3, t),
-  1.1,
-  (t) => 0.4 * Math.sin(Math.PI * clamp((t - (T.emersion - 0.25)) / 0.85)),
-  () => 0,
-  101,
-);
-ambiente(
-  sup,
-  T.emersion - 0.3,
-  DUR,
-  560,
-  1.4,
-  (t) => smoothstep(T.emersion - 0.3, T.emersion + 0.6, t),
-  103,
-);
-
-// ---------------------------------------------------------------- 11. conexión: la ciudad se enciende
-{
-  const tc = T.conexion;
-  golpe(sup, rev, 0.6, tc, 0.9, 46, 111, 1.0);
-  // acorde de resolución (Re mayor add9) que se abre con la ola de luz
-  pad(
-    sup,
-    rev,
-    0.55,
-    tc - 0.9,
-    DUR,
-    [73.42, 110, 146.83, 185.0, 220, 329.63, 440],
-    (t) =>
-      0.018 *
-      (0.3 * smoothstep(tc - 0.9, tc, t) + 0.7 * smoothstep(tc, tc + 0.8, t)) *
-      (1 - smoothstep(DUR - 1.4, DUR, t) * 0.6),
-    (t) => 0.4 + 0.6 * smoothstep(tc, T.ondaCiudad[1], t),
-  );
-  // la ola de luz recorre la ciudad: barrido estéreo de izquierda a derecha
-  barrido(
-    sup,
-    rev,
-    0.3,
-    T.ondaCiudad[0],
-    T.ondaCiudad[1] + 0.3,
-    (t) => 1800 + 2400 * smoothstep(T.ondaCiudad[0], T.ondaCiudad[1], t),
-    2.5,
-    (t) =>
-      0.22 *
-      Math.sin(Math.PI * clamp((t - T.ondaCiudad[0]) / (T.ondaCiudad[1] + 0.3 - T.ondaCiudad[0]))),
-    (t) => lerp(-0.6, 0.6, clamp((t - T.ondaCiudad[0]) / (T.ondaCiudad[1] - T.ondaCiudad[0]))),
-    112,
-  );
-  campana(sup, rev, 0.6, tc + 0.05, 1174.66, 0.012, 0.3, 1.8);
-  campana(sup, rev, 0.6, tc + 0.35, 1479.98, 0.008, -0.3, 1.8);
 }
 
 // ---------------------------------------------------------------- amortiguación al cruzar la superficie
@@ -487,10 +368,7 @@ for (const ch of [0, 1]) {
   for (let i = 0; i < N; i++) {
     if (i % 32 === 0) {
       const t = ts(i);
-      // se cierra al entrar al agua y se vuelve a abrir al emerger frente a la ciudad B
-      const s =
-        smoothstep(T.picada[1] - 0.02, T.cruceCamara + 0.08, t) *
-        (1 - smoothstep(T.emersion - 0.1, T.emersion + 0.15, t));
+      const s = smoothstep(T.picada[1] - 0.02, T.cruceCamara + 0.08, t);
       lp.set("lp", 16000 * (380 / 16000) ** s, 0.7);
     }
     sup[ch][i] = lp.run(sup[ch][i]);
@@ -536,10 +414,7 @@ for (const ch of [0, 1]) {
   const lp = new Biquad();
   for (let i = 0; i < N; i++) {
     if (i % 32 === 0) {
-      const t = ts(i);
-      const s =
-        smoothstep(T.picada[1] - 0.02, T.cruceCamara + 0.08, t) *
-        (1 - smoothstep(T.emersion - 0.1, T.emersion + 0.15, t));
+      const s = smoothstep(T.picada[1] - 0.02, T.cruceCamara + 0.08, ts(i));
       lp.set("lp", 16000 * (500 / 16000) ** s, 0.7);
     }
     revOut[ch][i] = lp.run(revOut[ch][i]);

@@ -1,54 +1,112 @@
-# Cirion · Conexión entre ciudades
+# Cirion · Drones sobre la ciudad
 
-Pieza de **24 s**, 1920 × 1080, 30 fps, sin textos ni locución. Sobre una bahía urbana de
-noche (referencia: skyline de bahía con coronas doradas y reflejos largos en el agua), 1601
-drones forman el logo de Cirion en 3D, **desde el centro hacia afuera**, por encima de los
-edificios. La cámara hace un paneo al logo; un **cable de red submarino** sale de una torre
-de la ciudad, sube hasta el logo y, al tocarlo, el logo se transforma en energía que baja
-por el cable hasta el fondo del mar. Allí el cable **se empalma con un troncal existente**
-(sin extremos cortados), el pulso de datos recorre el mar y llega a **otra ciudad
-tecnológica**, que se enciende al conectarse. Una sola toma aparente.
+Pieza de **12 s**, 1920 × 1080, 30 fps, horizontal, sin textos ni locución, una sola toma
+aparente. Sobre una bahía urbana de noche, 1601 drones forman el logo de Cirion en 3D,
+desde el centro hacia afuera y por encima de los edificios. Los drones dejan el logo en
+orden y forman una corriente que se concentra en un haz con cabeza luminosa; el haz baja en
+curva hasta el agua, la cruza y, ya bajo la superficie, guía la aparición del cable
+submarino, que se apoya en el lecho. Un pulso de datos recorre el cable al final.
 
 Construida con el motor del repositorio (HyperFrames) y una escena Three.js controlada por
 tiempo: cada cuadro se calcula a partir de `t` (evento `hf-seek`), con semilla fija y sin
 reloj del navegador. Render HDR con bloom, tonemapping fílmico ACES, viñeta y grano
 determinista. Banda sonora de síntesis procedural propia.
 
-> El brief original pedía 12 s. La nueva narrativa (paneo, cable desde la ciudad, empalme,
-> recorrido por el mar y segunda ciudad) no entra en 12 s, por eso la pieza dura 24 s. La
-> duración y cada tramo se ajustan en `src/config.js` (`duracion` y `tiempos`).
+## Técnica elegida
+
+**Ciudad 3D procedural, no fondo fotográfico.** La narrativa exige que la cámara se desplace
+casi 300 m, baje al agua y la atraviese: eso no se puede simular sobre una foto plana sin
+inventar paralaje. Además, la foto de referencia (`image.png`) mide **433 × 292 px**, ~4,4 veces
+menos que el ancho del master; ampliarla no agrega detalle. La foto se usó solo como guía de
+aspecto (fachadas oscuras con oficinas encendidas, remates cálidos escasos, reflejos largos y
+fragmentados).
+
+El realismo de la ciudad sale del sombreado, no del brillo:
+
+- Fachadas con _interior mapping_ (techo con luminarias, piso, tabiques y mobiliario detrás del
+  vidrio), siete tipologías (muro cortina, aletas, hormigón con ventanas punzonadas,
+  residencial con losas de balcón, podio comercial, servicio, patrimonio).
+- Ocupación nocturna realista: 18–50 % de los pisos encendidos, por inquilino (bloques de
+  1–3 pisos), y dentro de cada piso grupos de oficinas encendidas (~70 % de sus vanos).
+  Temperaturas de color 2700–5000 K con intensidad moderada; nada parpadea.
+- Vidrio con Fresnel y reflejo del cielo con resplandor urbano; cada paño refleja algo
+  distinto (planitud imperfecta). Los promedios a distancia conservan la energía del
+  detalle: de lejos no aparecen bandas más claras que de cerca, y no hay centelleo.
+- Remates con lavado cálido o linterna solo en pocas torres; tope de altura individual
+  detrás del logo (sin línea de techos plana).
+- **Sin aristas cian ni magenta en los edificios**: los colores de marca quedan para el
+  logo, los drones, el haz y la energía del cable.
+- Agua con reflejo planar HDR alargado en vertical y fragmentado por el rizado; altas luces
+  comprimidas (sin blancos saturados ni espejo perfecto).
+
+**Una trayectoria maestra compartida** (`src/path.js`) gobierna la boca de la corriente, la
+cabeza, la estela, el seguimiento de cámara y el revelado del cable: tres Bézier cúbicas con
+tangente continua (cielo, descenso submarino, tendido en el lecho), remuestreadas a paso
+uniforme de longitud de arco (0,2 m) y con marcos por transporte paralelo precalculados.
+
+- Cabeza: velocidad integrada, sin escalones. En el cielo acelera con ley de potencia
+  (v ∝ t^1,25) desde 4 m/s hasta 134 m/s al tocar el agua; el agua la frena en seco
+  (τ = 0,06 s) hasta ~15 m/s; tras apoyarse sigue tendiendo a 9 m/s y se aleja hacia la
+  penumbra (no hay extremo de cable cortado a la vista).
+- Drones: funciones puras de `t`. Cada uno sale de su lugar en orden (derecha → izquierda),
+  viaja por una curva Hermite hasta la boca con la tangente y la velocidad de la trayectoria,
+  sigue la trayectoria y se funde en la cabeza (su luz pasa a la cabeza: haz angosto, sin
+  masa ni explosiones).
+- Estela: es el recorrido reciente de la cabeza (`s(t) − s(t − 0,32 s)`); al frenar en el agua
+  su cola sigue entrando por la misma trayectoria, no se acorta de golpe.
+- Cable: anillos precalculados a lo largo de la trayectoria; en cada cuadro solo cambia
+  cuántos se dibujan y el último se coloca en el frente de revelado, 0,9 m detrás de la
+  cabeza. No se escala un tubo completo ni se recalculan orientaciones.
+- Cruce de superficie: con la cámara sobre el agua, la cabeza se ve en su posición
+  refractada (profundidad aparente d / 1,33, atenuada por el agua recorrida); en el último
+  metro converge a la posición real, así no salta al sumergirse. Refracción ondulante breve,
+  burbujas pocas, sin destello de pantalla completa, y una adaptación de exposición suave
+  (+30 %) como la de una cámara real.
 
 ## Guion técnico
 
-| Entrada–salida | Acción visual                                                                                                                                          | Sonido                                                               |
-| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------- |
-| 0,0–0,6 s      | Fundido desde negro. Bahía nocturna frente a la ciudad A: torres con coronas doradas, muros cortina, luces violetas en la costanera, puente y reflejos | Ciudad lejana y agua de la bahía                                     |
-| 0,3–3,2 s      | El logo 3D se abre desde su centro: cada dron se enciende al separarse del centro y llega a su lugar con desaceleración suave                          | Textura tonal (Re sus2) que crece con la formación                   |
-| 3,2–5,6 s      | Paneo: la cámara sube y se acerca al logo; la perspectiva revela su volumen sobre la ciudad                                                            | La textura se abre                                                   |
-| 5,4–7,4 s      | El cable sale de la azotea de la torre de datos y sube energizado hasta el centro del logo                                                             | Barrido ascendente y zumbido eléctrico que sube de tono              |
-| 7,4–8,4 s      | Contacto: el logo se transforma; los drones fluyen en espiral hacia el punto de contacto; anillos de energía; el núcleo se comprime                    | Golpe contenido, campanas y ascenso de energía                       |
-| 8,4–9,6 s      | Picada: el cable cae en diagonal hacia la bahía frente a la costanera; la cámara gira y lo sigue                                                       | Desplazamiento descendente paneado a la derecha                      |
-| 9,6–9,9 s      | Toca el agua: luz local, onda y burbujas; la cámara cruza la superficie sin corte                                                                      | Golpe sordo y burbujas; todo se amortigua                            |
-| 9,9–12,4 s     | Descenso hasta el lecho; el cable llega a la unidad de derivación del troncal y se empalma                                                             | Presión grave, zumbido del cable, cierre metálico y pulso            |
-| 12,6–19,4 s    | Recorrido por el mar: la cámara sigue el pulso de datos a lo largo del troncal, sobre el relieve del lecho                                             | Agua que corre y pulsos de datos cada vez más seguidos               |
-| 19,4–20,8 s    | La cámara emerge frente a la ciudad B (dormida); el pulso llega a la estación de amarre de la costa                                                    | El sonido se vuelve a abrir; ambiente de la ciudad B                 |
-| 20,8–23,2 s    | Conexión: una ola de luz azul recorre la ciudad B desde la estación; se encienden ventanas, coronas, aristas LED, fachadas de medios y la costanera    | Golpe grave, acorde de resolución y barrido estéreo que sigue la ola |
-| 23,2–24,0 s    | Plano final sobre la ciudad conectada                                                                                                                  | Cola suave                                                           |
+| Tiempo      | Acción visual                                                                                                               | Sonido                                                |
+| ----------- | --------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| 0,0–0,6 s   | Fundido desde negro. Bahía nocturna frente a la ciudad                                                                      | Ciudad lejana y agua de la bahía                      |
+| 0,2–2,6 s   | El logo se abre desde su centro, por encima del skyline                                                                     | Textura tonal (Re sus2) que crece con la formación    |
+| 2,6–4,3 s   | Logo completo, estable y legible (flotación mínima de dron real); la cámara se acerca despacio                              | La textura se abre                                    |
+| 4,3–5,4 s   | Los drones dejan el logo en orden, de derecha a izquierda, hacia la boca a la derecha del logo; nace la cabeza (4,75 s)     | Comienza el ascenso de energía                        |
+| 4,3–7,0 s   | La corriente se ordena y se concentra en un haz angosto con cabeza luminosa y estela controlada; la cámara la acompaña      | El ascenso crece y se funde con la picada (sin corte) |
+| 6,6–8,1 s   | Picada en curva: aceleración continua; la cámara baja y espera la cabeza en el punto de entrada                             | Un solo desplazamiento descendente                    |
+| 8,1 s       | Toca el agua: el agua la frena; la estela se drena por la misma trayectoria; onda, rizado iluminado desde abajo, burbujas   | Golpe sordo y pocas burbujas                          |
+| 8,1–8,85 s  | La imagen refractada de la cabeza baja bajo la superficie; la cámara desciende                                              | Agua cercana                                          |
+| 8,85 s      | La cámara cruza la superficie                                                                                               | Todo se amortigua                                     |
+| 8,85–10,6 s | La cabeza desciende y guía el cable: la cubierta aparece detrás de ella sobre la misma trayectoria; apoyo suave con sombra  | Presión grave                                         |
+| 10,6–12,0 s | El cable queda en reposo en el lecho; el pulso de datos lo recorre (10,7–11,7 s) y deja un rastro tenue; la cabeza se aleja | Pulso grave y cola                                    |
+
+## Controles de continuidad
+
+`window.__cirion` expone diagnósticos (también en el navegador del Studio):
+
+- `continuidad(t0, t1)` — por cuadro: desplazamiento máximo en pantalla de drones y cabeza.
+  Tramo 4,3–9,0 s: drones ≤ 16 px/cuadro. La cabeza se mueve en pantalla ≤ 14 px/cuadro,
+  salvo los 6 cuadros finales de la picada (8,0–8,17 s, hasta ~45 px), siempre con la estela
+  continua detrás; en ese momento la cámara la espera en el punto de entrada en lugar de
+  perseguirla a 130 m/s.
+- Cámara (mismo módulo `src/camera.js` que la escena): giro ≤ 3°/cuadro (máximo al recibir
+  la picada), traslación ≤ 3 m/cuadro, siempre continua.
+- Revisión cuadro a cuadro del tramo 4,3–9,4 s: diferencia media entre cuadros sin picos
+  salvo el cambio de medio en el cruce (8,80–8,87 s), que es gradual.
 
 ## Estructura
 
-- `index.html` — composición HyperFrames (960 × 540 CSS, 24 s, 30 fps): canvas y audio.
-- `src/config.js` — **todo lo ajustable**: tiempos, colores, logo 3D, drones, cables (origen,
-  picada, troncal y velocidad del pulso), ciudades A y B, lecho, agua, cámara y posproceso.
-- `src/scene.js` — orquesta la escena: cámara con seguimiento del cable y del pulso, drones,
-  núcleo, empalme, cielo, agua con reflejo planar HDR, lecho que acompaña a la cámara, nieve
-  marina, burbujas, rayos y el render por tiempo.
-- `src/city.js` — ciudad procedural instanciada (A y B con la misma función): fachadas con
-  coronas iluminadas, muros cortina, residenciales, patrimonio dorado, techos inclinados,
-  agujas, LED, fachadas de medios, costanera, tránsito, puente y la ola de encendido.
-- `src/cable.js` — cable nuevo (reconstruido cada cuadro) y troncal del lecho, con armadura
-  helicoidal, hilo marcador magenta, pulsos y flujo de datos.
-- `src/post.js` — HDR (MSAA ×4) → bloom en 4 niveles → ACES, viñeta y grano por cuadro.
+- `index.html` — composición HyperFrames (960 × 540 CSS, 12 s, 30 fps): canvas y audio.
+- `src/config.js` — **todo lo ajustable**: tiempos, colores, logo 3D, drones, trayectoria
+  maestra y perfil de velocidad, haz, cable, ciudad, agua, cámara y posproceso.
+- `src/path.js` — trayectoria maestra (geometría, marcos, perfil de velocidad de la cabeza).
+- `src/camera.js` — claves de cámara y seguimiento parcial de la cabeza (promedio gaussiano).
+- `src/scene.js` — drones, cabeza, estela, cielo, agua con reflejo planar HDR, lecho con
+  sombra de contacto, nieve marina, burbujas y el render por tiempo.
+- `src/city.js` — ciudad procedural instanciada (fachadas, remates, costanera, tránsito,
+  puente, edificio patrimonial).
+- `src/cable.js` — cable armado revelado sobre la trayectoria, pulso y rastro.
+- `src/post.js` — HDR (MSAA ×4) → bloom en 4 niveles → ACES, viñeta, grano por cuadro,
+  refracción del cruce y exposición.
 - `src/glsl.js`, `src/util.js`, `src/logo-sampler.js`, `src/logo-data.js` (generado).
 - `scripts/synth-audio.mjs`, `scripts/normalize-audio.sh` — banda sonora.
 - `vendor/` — Three.js 0.181.2 local (MIT); el render no depende de CDN.
@@ -65,14 +123,14 @@ $HF check .     # aprobado (avisos de rendimiento de SwiftShader, sin efecto en 
 $HF preview     # Studio en el navegador
 
 # Previsualización 960 × 540 (H.264 + AAC)
-$HF render . --fps 30 -o renders/cirion_conexion-ciudades_preview_960x540_v03.mp4
+$HF render . --fps 30 -o renders/cirion_drones-ciudad_preview_960x540_v03.mp4
 
 # Master 1920 × 1080 (H.264 High + AAC LC 48 kHz) — misma fuente, Chrome a DPR 2
 $HF render . --resolution landscape --fps 30 -q delivery \
-  -o renders/cirion_conexion-ciudades_master_1920x1080_v03.mp4
+  -o renders/cirion_drones-ciudad_master_1920x1080_v03.mp4
 ```
 
-Fotogramas sueltos para revisar: `$HF snapshot . --at 2.4,4.6,6.6,7.8,9.6,12.9,16,21.5`.
+Fotogramas sueltos para revisar: `$HF snapshot . --at 3.6,6.0,8.6,9.6,11.5 --no-end`.
 
 ## Logo
 
@@ -80,27 +138,40 @@ Fotogramas sueltos para revisar: `$HF snapshot . --at 2.4,4.6,6.6,7.8,9.6,12.9,1
   3271 bytes, sha256 `2febbdf6…bc203`), sin modificar.
 - Los drones se ubican muestreando sus trazados con `Path2D` (regla nonzero, la misma del
   SVG) y `getPointAtLength` para el contorno: no hay tipografía ni redibujo. El volumen repite
-  el contorno en 3 capas de profundidad (40 m de extrusión) detrás de la cara frontal.
+  el contorno en 3 capas de profundidad (26 m de extrusión) detrás de la cara frontal.
 - Color: trazo magenta `#EF2AC1` tal como viene en el archivo; letras en blanco (versión
   negativa del duo para fondo nocturno).
 
 ## Audio
 
 `assets/audio/banda-sonora.m4a` es síntesis original: no usa muestras ni pistas de terceros.
+Lee los tiempos de `src/config.js`: el ascenso acompaña la convergencia y se funde con la
+picada; un solo desplazamiento para la picada (no uno por movimiento); golpe sordo y pocas
+burbujas en el ingreso; amortiguado desde el cruce de la cámara; pulso grave al apoyarse.
 
 ```bash
-node scripts/synth-audio.mjs       # → assets/audio/banda-sonora.raw.wav (lee los tiempos de src/config.js)
+node scripts/synth-audio.mjs       # → assets/audio/banda-sonora.raw.wav
 bash scripts/normalize-audio.sh    # ganancia lineal a −16 LUFS + limitador → AAC 160 kbps
 ```
 
-Medido en el archivo de audio: −16,1 LUFS integrados, pico verdadero −3,1 dBTP. Las mediciones
+Medido en el archivo de audio: −16,0 LUFS integrados, pico verdadero −3,1 dBTP. Las mediciones
 son instrumentales; **la mezcla no se escuchó** en este entorno.
+
+## Límites conocidos
+
+- La ciudad es procedural: es creíble en plano general nocturno y en movimiento, pero no
+  alcanza el detalle de una fotografía (no hay geometría de fachada más allá de volúmenes,
+  ni texturas escaneadas). No se presentó un aumento de brillo o resolución como realismo.
+- Para un fondo fotográfico real haría falta: **una fotografía nocturna con licencia de un
+  skyline frente al agua, de al menos 3840 × 2160 px (idealmente RAW o HDR con horquillado),
+  tomada desde unos 10–15 m sobre el agua con lente de 24–35 mm**, más una segunda placa
+  limpia del agua para el descenso. Aun así, solo serviría para el tramo inicial con cámara
+  casi fija; la picada y el cruce seguirían siendo 3D.
+- El render de este entorno usa GPU por software (SwiftShader): ~0,8 s por cuadro a 960 × 540;
+  el master 1920 × 1080 tarda unas cuatro veces más.
 
 ## Pendientes
 
 - Revisar el preview v03 y luego exportar el master con el comando de arriba.
-- Confirmar la duración de 24 s (el brief original era de 12 s).
-- Las ciudades son procedurales y genéricas (no reproducen ninguna ciudad real ni sus íconos).
-  Las balizas rojas de las torres y las luces traseras de los autos son los únicos rojos.
 - Confirmar con marca la versión negativa del logo duo (letras blancas) para fondo oscuro.
 - Escuchar la mezcla con auriculares y altavoces antes de aprobar.

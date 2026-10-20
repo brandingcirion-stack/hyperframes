@@ -92,12 +92,14 @@ export function createPost(renderer, { ancho, alto, dpr, cfg, fps }) {
       uGrano: { value: cfg.grano },
       uCuadro: { value: 0 },
       uFundido: { value: 1 },
+      uOnda: { value: 0 }, // refracción al cruzar la superficie del agua
+      uTiempo: { value: 0 },
       uRes: { value: new THREE.Vector2(W, H) },
     },
     vertexShader: VERT,
     fragmentShader: /* glsl */ `
       uniform sampler2D tScene, tB0, tB1, tB2, tB3;
-      uniform float uBloom, uRadio, uExpo, uVineta, uGrano, uCuadro, uFundido;
+      uniform float uBloom, uRadio, uExpo, uVineta, uGrano, uCuadro, uFundido, uOnda, uTiempo;
       uniform vec2 uRes;
       varying vec2 vUv;
       vec3 aces(vec3 x) {
@@ -113,11 +115,18 @@ export function createPost(renderer, { ancho, alto, dpr, cfg, fps }) {
         return fract((p3.x + p3.y) * p3.z);
       }
       void main() {
-        vec3 c = texture2D(tScene, vUv).rgb;
-        vec3 b = texture2D(tB0, vUv).rgb * 1.0
-               + texture2D(tB1, vUv).rgb * mix(0.6, 1.0, uRadio)
-               + texture2D(tB2, vUv).rgb * mix(0.35, 0.9, uRadio)
-               + texture2D(tB3, vUv).rgb * mix(0.2, 0.8, uRadio);
+        // cruce de la superficie: la imagen se refracta con ondas pequeñas y breves
+        vec2 uv = vUv;
+        if (uOnda > 0.001) {
+          float a = uOnda * 0.0065;
+          uv += vec2(sin(uv.y * 48.0 + uTiempo * 21.0) + 0.5 * sin(uv.y * 97.0 - uTiempo * 33.0),
+                     sin(uv.x * 37.0 + uTiempo * 17.0)) * a;
+        }
+        vec3 c = texture2D(tScene, uv).rgb;
+        vec3 b = texture2D(tB0, uv).rgb * 1.0
+               + texture2D(tB1, uv).rgb * mix(0.6, 1.0, uRadio)
+               + texture2D(tB2, uv).rgb * mix(0.35, 0.9, uRadio)
+               + texture2D(tB3, uv).rgb * mix(0.2, 0.8, uRadio);
         c += b * uBloom * 0.35;
         c = aces(c * uExpo);
         vec2 q = vUv - 0.5;
@@ -140,7 +149,7 @@ export function createPost(renderer, { ancho, alto, dpr, cfg, fps }) {
 
   return {
     sceneRT,
-    render(scene, camera, t, fundido) {
+    render(scene, camera, t, fundido, onda = 0, expo = cfg.exposicion) {
       renderer.setRenderTarget(sceneRT);
       renderer.clear();
       renderer.render(scene, camera);
@@ -163,6 +172,9 @@ export function createPost(renderer, { ancho, alto, dpr, cfg, fps }) {
       });
       final.uniforms.uCuadro.value = Math.round(t * fps);
       final.uniforms.uFundido.value = fundido;
+      final.uniforms.uOnda.value = onda;
+      final.uniforms.uExpo.value = expo;
+      final.uniforms.uTiempo.value = t;
       pass(final, null);
     },
   };

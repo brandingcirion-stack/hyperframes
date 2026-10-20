@@ -1,199 +1,164 @@
 // Parámetros centralizados de la pieza. Todo lo ajustable vive aquí:
-// duración, tiempos de cada tramo, colores, ciudades, logo 3D, cables, agua, cámara y
-// posproceso. Unidades de mundo = metros. Tiempos en segundos de composición.
+// duración, tiempos de cada tramo, colores, ciudad, logo 3D, trayectoria maestra del haz,
+// cable, agua, cámara y posproceso. Unidades de mundo = metros. Tiempos en segundos.
 
 export const CONFIG = {
-  duracion: 24,
+  duracion: 12,
   fps: 30,
   // Tamaño CSS de la composición. El preview se renderiza a este tamaño (960×540);
-  // el master 1920×1080 se obtiene con `--resolution landscape` (DPR 2), y todo lo
-  // que se mide en píxeles se escala con el devicePixelRatio.
+  // el master 1920×1080 se obtiene con `--resolution landscape` (DPR 2).
   base: { ancho: 960, alto: 540 },
   semilla: 20251009,
 
   colores: {
-    negro: "#000000",
+    // marca: solo logo, drones, haz y energía de conexión
     azulProfundo: "#001F60",
     azul: "#00A7E1",
     magenta: "#EF2AC1",
-    // Letras del logo duo sobre fondo nocturno (versión negativa: blanco).
-    letrasLogo: "#FFFFFF",
-    lechoMarino: "#4A5868",
-    bruma: "#0E1A30", // bruma urbana nocturna
-    oro: "#FFB24A", // reflectores dorados de las coronas (ref. Marina Bay)
-    violeta: "#7A3CFF", // luces bajas de la costanera
+    letrasLogo: "#FFFFFF", // versión negativa del logo duo sobre la noche
+    // ciudad y entorno: colores fotográficos naturales
+    bruma: "#161A22",
+    lechoMarino: "#5A6168",
   },
 
-  // Guion por tramos (ver README.md).
+  // Guion por tramos (ver README.md). Los nombres de `convergencia`, `picada`,
+  // `cruceCamara` y `llegadaFondo` los usa también la banda sonora.
   tiempos: {
     fundidoEntrada: 0.6,
-    formacion: [0.3, 3.2], // el logo crece desde su centro hacia afuera
-    paneo: [3.2, 5.6], // la cámara se acerca al logo
-    cableSube: [5.4, 7.4], // el cable sale de la torre de datos y sube al logo
-    contacto: 7.4,
-    salidaConvergencia: [7.4, 7.75], // al tocarlo, el logo se transforma en el cable
-    duracionConvergencia: [0.5, 0.62],
-    compresion: [8.0, 8.4],
-    picada: [8.4, 9.6], // del logo a la bahía
-    cruceCamara: 9.86, // la cámara entra al agua
-    llegadaUnion: 12.4, // el cable se empalma con el troncal del lecho
-    pulsoUnion: [12.4, 13.6],
-    viaje: [12.6, 20.8], // el pulso de datos recorre el troncal hasta la otra ciudad
-    emersion: 19.55, // la cámara sale del agua frente a la ciudad B
-    conexion: 20.8, // el pulso llega a la estación de amarre
-    ondaCiudad: [20.8, 23.2], // la ciudad B se enciende desde la costa
+    formacion: [0.2, 2.6], // el logo se abre desde su centro
+    sosten: [2.6, 4.3], // figura completa, estable y legible
+    convergencia: [4.3, 7.0], // los drones dejan el logo en orden y forman la corriente
+    salidas: [4.3, 5.4], // ventana en la que cada dron abandona su lugar
+    picada: [6.6, 8.1], // la cabeza acelera en curva hasta tocar el agua (picada[1])
+    cruceCamara: 8.85, // la cámara atraviesa la superficie (tras ver el impacto)
+    llegadaFondo: 10.6, // el cable queda apoyado en el lecho
+    pulso: [10.7, 11.7], // pulso de datos a lo largo del cable
   },
 
   logo: {
-    centro: [0, 330, -620], // centro de la cara frontal, por encima del skyline
-    ancho: 380,
-    profundidad: 40,
+    centro: [0, 150, -320], // centro de la cara frontal (sobre la bahía, frente a la ciudad)
+    ancho: 260,
+    profundidad: 26,
     capasProfundidad: 3,
-    giro: -22, // grados sobre su eje vertical respecto de la cámara inicial
+    giro: -12, // grados sobre su eje vertical respecto de la cámara inicial
     espaciado: 13.5, // unidades del viewBox del SVG (1140 de ancho)
     pasoContorno: 11,
     margenContorno: 3.2,
   },
 
-  particulas: {
-    tamano: 1.35, // radio del núcleo en px (a 960 de ancho)
-    halo: 3.4,
-    intensidad: 4.2, // HDR: brillo de cada dron
+  drones: {
+    tamano: 1.25, // radio del núcleo en px (a 960 de ancho)
+    halo: 3.0,
+    intensidad: 4.2,
     intensidadHalo: 0.12,
     brilloCapas: [1.0, 0.5, 0.36, 0.26],
-    estelaMax: 6,
-    giroConvergencia: 0.9,
+    estelaMax: 5, // px: estela de movimiento máxima de cada dron
+    velocidadCorriente: 170, // m/s con que los drones cruzan el logo hacia la boca
   },
 
-  nucleo: { radio: 9, radioComprimido: 4, brumaM: 14, intensidad: 9 },
+  // Trayectoria maestra: boca (lado derecho del logo) → curva descendente → agua →
+  // descenso submarino → apoyo en el lecho. Tangente continua en cada unión.
+  trayectoria: {
+    salidaLateral: 18, // m a la derecha del logo donde nace la corriente
+    entrada: [175, 0, -150], // punto donde la cabeza toca el agua
+    tangenteEntrada: [0.42, -0.86, 0.29],
+    apoyo: [214, null, -146], // xz donde el cable toca el lecho (y = relieve + radio)
+    direccionLecho: [0.96, 0, 0.28], // rumbo del cable apoyado
+    largoApoyo: 90, // m de tendido: la cabeza sigue y se pierde en la penumbra del fondo
+    curvaLecho: 0.22, // rad: giro suave del tendido sobre el lecho
+    profundidad: 20,
+    velocidadInicial: 4, // m/s de la cabeza al nacer en la boca
+    potencia: 1.25, // forma de la aceleración en el cielo (v ∝ t^potencia)
+    tauFrenado: 0.06, // s: el agua frena la cabeza en seco (decaimiento exponencial de la velocidad)
+    velocidadFinal: 9, // m/s: tras apoyarse, la cabeza sigue tendiendo y se aleja hacia la penumbra
+  },
 
-  // Cable de red submarino (fibra óptica con armadura de acero).
+  haz: {
+    cabezaPx: 2.0,
+    haloPx: 10,
+    estelaS: 0.32, // s de recorrido visibles como estela (se acorta al frenar)
+    estelaMin: 2.0, // m mínimos de estela
+    estelaMax: 46, // m máximos de estela
+    anchoPx: 3.0,
+  },
+
   cable: {
-    diametro: 1.5, // m (estilizado para leerse desde lejos)
-    energiaAire: 2.4, // emisión del tramo aéreo (energizado)
-    pulsos: { velocidad: 22, separacion: 14, intensidad: 1.1 },
-    hilos: 22,
-    paso: 3.2,
-    puntaHalo: 12,
-    origen: [92, 218, -870], // azotea de la torre de datos (ciudad A)
-    controlSubida: [60, 360, -800],
-    entrada: [190, 0, -262], // donde toca el agua
-    controlPicada: [120, 170, -470],
+    diametro: 0.5, // m: cable armado de aguas someras (legible a 7–15 m)
+    hilos: 18, // alambres de la armadura
+    paso: 0.9, // m por vuelta de la hélice
+    frente: 0.9, // m entre la cabeza y la cubierta ya formada
   },
 
-  // Cable troncal existente en el lecho: se empalma con el nuevo y llega a la ciudad B.
-  troncal: {
-    // puntos de paso (x, z); la altura sigue el relieve
-    puntos: [
-      [-260, -330],
-      [60, -262],
-      [300, -228], // unidad de derivación (empalme)
-      [560, -190],
-      [820, -150],
-      [1060, -122],
-      [1240, -110],
-      [1290, -110],
-    ],
-    union: 2, // índice del empalme
-    diametro: 1.3,
-    velocidadPulso: [40, 260], // m/s al salir del empalme → crucero
+  atmosfera: { bruma: 0.00026, nubes: 0.22 },
+
+  agua: {
+    reflejo: 1.0,
+    distorsion: 0.018,
+    oleaje: 0.3,
+    niebla: 0.055, // densidad de niebla submarina (escala de bahía poco profunda)
+    anillo: { velocidad: 4.5, ancho: 0.5, duracion: 1.2 },
+    burbujas: 12,
   },
 
-  ciudadA: {
+  submarino: { nieve: 700, rayos: 4 },
+
+  ciudad: {
     semilla: 303,
-    costa: -470, // z de la costanera
-    x: [-1700, 1180],
-    suelo: [-4500, 1260],
+    costa: -470,
+    x: [-1700, 1700],
     profundidad: 2430,
     manzana: 74,
     calle: 20,
-    alturaBase: 26,
+    alturaBase: 24,
     clusters: [
-      { x: -180, z: -1150, alto: 190, rx: 650, rz: 520 },
-      { x: 700, z: -1550, alto: 160, rx: 420, rz: 420 },
-      { x: -950, z: -1650, alto: 130, rx: 380, rz: 380 },
+      { x: -160, z: -1150, alto: 200, rx: 650, rz: 520 },
+      { x: 700, z: -1500, alto: 150, rx: 420, rz: 420 },
+      { x: -720, z: -1500, alto: 190, rx: 300, rz: 300 },
+      { x: 1250, z: -1350, alto: 170, rx: 300, rz: 300 },
     ],
-    torreIconica: { x: -360, z: -980, alto: 300, lado: 46 },
-    autos: 170,
+    torreIconica: { x: -380, z: -980, alto: 290, lado: 44 },
+    autos: 150,
     puente: { desde: [-340, 22, -150], hasta: [-720, 22, -480], ancho: 26, pilas: 90 },
   },
 
-  // Ciudad B (destino): en la costa este, frente a la cámara al emerger.
-  ciudadB: {
-    semilla: 909,
-    costaMundo: 1300, // x de su costanera (mira hacia −x)
-    x: [-440, 1500], // en coordenadas locales (= z del mundo)
-    suelo: [-470, 4000],
-    profundidad: 2000,
-    manzana: 70,
-    calle: 20,
-    alturaBase: 30,
-    clusters: [
-      { x: 120, z: -820, alto: 280, rx: 520, rz: 480 },
-      { x: -700, z: -1100, alto: 170, rx: 420, rz: 400 },
-    ],
-    torreIconica: { x: 260, z: -700, alto: 400, lado: 46 },
-    autos: 120,
-    amarre: [1312, 3, -110], // estación de amarre del cable (mundo)
-  },
-
-  atmosfera: { bruma: 0.00028, nubes: 0.35 },
-
-  agua: {
-    reflejo: 1.25,
-    distorsion: 0.022,
-    oleaje: 0.22, // agua calma, casi espejo (ref. bahía)
-    niebla: 0.026,
-    anillo: { velocidad: 7, ancho: 0.9, duracion: 1.4 },
-    burbujas: 16,
-  },
-
-  submarino: { nieve: 900, rayos: 5, pulso: { radioMax: 18, ancho: 1.4 } },
-
-  // Profundidad del lecho a lo largo de x (pares [x, profundidad]).
-  lecho: [
-    [-1000, 46],
-    [320, 46],
-    [620, 58],
-    [880, 40],
-    [1060, 16],
-    [1200, 6],
-    [1296, 2],
-  ],
-
-  // Cámara: claves [t, pos, mira]. Durante el seguimiento la mira se mezcla con el
-  // extremo del cable o con el pulso de datos (ver `seguimiento`).
+  // Cámara: claves [t, pos, mira] interpoladas con Hermite. Desde 5 s la mira se mezcla con
+  // la cabeza del haz (misma trayectoria maestra) según `seguimiento` ([t, peso], tramos
+  // suaves); la cabeza se promedia ±2·`suavizado` s para no transmitir tirones.
+  // En el impacto el peso baja: la cámara espera la cabeza en el punto de entrada en lugar
+  // de perseguirla a 130 m/s (giro máximo ≈ 2,5°/cuadro).
   camara: {
     fov: 50,
     claves: [
-      { t: 0.0, pos: [-150, 16, 90], mira: [-20, 215, -620] },
-      { t: 3.2, pos: [-118, 22, 52], mira: [-8, 245, -620] },
-      { t: 5.6, pos: [-60, 150, -250], mira: [20, 280, -690] },
-      { t: 7.4, pos: [-40, 158, -268], mira: [36, 296, -700] },
-      { t: 8.4, pos: [-12, 160, -262], mira: [20, 300, -660] },
-      { t: 9.1, pos: [92, 84, -236], mira: [170, 20, -270] },
-      { t: 9.86, pos: [160, 0, -236], mira: [200, -10, -262] },
-      { t: 11.0, pos: [212, -20, -232], mira: [250, -36, -246] },
-      { t: 12.4, pos: [268, -36, -214], mira: [300, -44, -228] },
-      { t: 13.4, pos: [262, -37, -236], mira: [320, -44, -226] },
-      { t: 14.4, pos: [280, -36, -238], mira: [360, -44, -220] },
-      { t: 16.5, pos: [600, -45, -196], mira: [680, -50, -180] },
-      { t: 18.6, pos: [880, -28, -150], mira: [960, -22, -136] },
-      { t: 19.55, pos: [960, 0, -128], mira: [1300, 40, -112] },
-      { t: 20.6, pos: [985, 14, -122], mira: [1320, 75, -110] },
-      { t: 24.0, pos: [1005, 24, -118], mira: [1420, 110, -110], quieta: true },
+      { t: 0.0, pos: [-70, 11, 90], mira: [0, 118, -320] },
+      { t: 2.6, pos: [-58, 12, 70], mira: [6, 122, -320] },
+      { t: 4.3, pos: [-40, 14, 46], mira: [16, 124, -320] },
+      { t: 5.8, pos: [26, 18, -16], mira: [120, 128, -290] },
+      { t: 7.0, pos: [100, 16, -84], mira: [168, 90, -230] },
+      { t: 7.7, pos: [135, 12, -112], mira: [174, 25, -165] },
+      { t: 8.1, pos: [149, 9, -123], mira: [177, 0, -150] }, // la cabeza toca el agua
+      { t: 8.85, pos: [172, 0, -138], mira: [182, -7, -150] }, // cruce de la superficie
+      { t: 9.5, pos: [186, -9, -142], mira: [195, -15, -149] },
+      { t: 10.2, pos: [199, -15, -141], mira: [207, -18.5, -148] },
+      { t: 10.9, pos: [207.5, -17.2, -140], mira: [219, -19.6, -145], quieta: true },
+      { t: 12.0, pos: [208.3, -17.3, -140.3], mira: [220, -19.6, -145], quieta: true },
     ],
-    // seguimiento del extremo del cable [inicio, fin de entrada, inicio salida, fin]
-    sigueCable: [5.3, 5.9, 12.2, 12.9],
-    sigueCableRetraso: 0.03,
-    // seguimiento del pulso de datos por el troncal
-    siguePulso: [13.6, 14.4, 18.4, 19.2],
+    seguimiento: [
+      [5.0, 0],
+      [6.0, 0.8],
+      [7.25, 0.8],
+      [8.0, 0.12],
+      [9.0, 0.4],
+      [10.0, 0.4],
+      [11.0, 0],
+    ],
+    suavizado: 0.15,
   },
 
   posproceso: {
-    exposicion: 1.05,
-    bloom: { umbral: 1.3, intensidad: 0.6, radio: 0.45 },
-    vineta: 0.3,
-    grano: 0.018,
+    exposicion: 1.0,
+    realceSubmarino: 0.3, // +30 % de exposición tras cruzar la superficie
+    bloom: { umbral: 1.5, intensidad: 0.5, radio: 0.45 },
+    vineta: 0.28,
+    grano: 0.016,
   },
 };
