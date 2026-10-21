@@ -41,6 +41,9 @@ export function createPost(renderer, { ancho, alto, dpr, cfg, fps }) {
       varying vec2 vUv;
       void main() {
         vec3 c = texture2D(tSrc, vUv).rgb;
+        // red de seguridad: un valor no finito (NaN o ∞) no entra al bloom, donde el
+        // desenfoque lo extendería a un rectángulo negro (la comparación con NaN es falsa)
+        c = all(lessThan(abs(c), vec3(6e4))) ? c : vec3(0.0);
         float l = max(c.r, max(c.g, c.b));
         // rodilla suave: sin cortes duros en el umbral
         float k = clamp((l - uUmbral + 0.5) / 1.0, 0.0, 1.0);
@@ -123,6 +126,7 @@ export function createPost(renderer, { ancho, alto, dpr, cfg, fps }) {
                      sin(uv.x * 37.0 + uTiempo * 17.0)) * a;
         }
         vec3 c = texture2D(tScene, uv).rgb;
+        c = all(lessThan(abs(c), vec3(6e4))) ? c : vec3(0.0);
         vec3 b = texture2D(tB0, uv).rgb * 1.0
                + texture2D(tB1, uv).rgb * mix(0.6, 1.0, uRadio)
                + texture2D(tB2, uv).rgb * mix(0.35, 0.9, uRadio)

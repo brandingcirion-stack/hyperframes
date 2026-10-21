@@ -685,7 +685,8 @@ const aguaMat = new THREE.ShaderMaterial({
           float base = exp(-pow((fk - 3.0) / 7.0, 2.0));
           float wk = base * mix(1.0, rotura, 0.65 * (1.0 - lejos));
           float jit = (vnoise(vec2(vWorld.x * 0.4, fk * 3.1 + uTime * 0.6)) - 0.5) * 0.004;
-          refl += texture2D(uRefl, uv + off + vec2(jit, -fk * sm)).rgb * wk;
+          vec3 rk = texture2D(uRefl, uv + off + vec2(jit, -fk * sm)).rgb;
+          refl += (all(lessThan(abs(rk), vec3(6e4))) ? rk : vec3(0.0)) * wk; // descarta no finitos
           wsum += base;
         }
         refl /= wsum;
@@ -1159,4 +1160,6 @@ window.__cirion = {
   renderAt,
   proyectar,
   continuidad,
+  escena: scene,
+  depurar: { renderer, reflectRT, post, camera, mirrorCam },
 };

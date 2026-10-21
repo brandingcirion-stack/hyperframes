@@ -297,9 +297,12 @@ export function createCity({ U, C, scene, extras = {} }) {
         attribute vec3 aDim;
         attribute vec4 aInfo;   // semilla, estilo, ocupación, base
         attribute vec4 aInfo2;  // remate, -, altura total, fracción del remate
-        varying vec3 vLp, vWorld, vN, vDim;
-        varying vec4 vInfo, vInfo2;
-        varying mat3 vRot;
+        varying vec3 vLp, vWorld, vN;
+        // datos por instancia sin interpolar: interpolados, un 5.0 llega como 4.9999995 en
+        // algunos píxeles y las comparaciones exactas de estilo cambian de rama (parpadeo)
+        flat varying vec3 vDim;
+        flat varying vec4 vInfo, vInfo2;
+        flat varying mat3 vRot;
         void main() {
           vLp = position * aDim;
           vDim = aDim;
@@ -316,9 +319,12 @@ export function createCity({ U, C, scene, extras = {} }) {
       fragmentShader: /* glsl */ `
         ${COMMON}
         uniform float uForma; // 0 caja, 1 cilindro, 2 techo inclinado
-        varying vec3 vLp, vWorld, vN, vDim;
-        varying vec4 vInfo, vInfo2;
-        varying mat3 vRot;
+        varying vec3 vLp, vWorld, vN;
+        // datos por instancia sin interpolar: interpolados, un 5.0 llega como 4.9999995 en
+        // algunos píxeles y las comparaciones exactas de estilo cambian de rama (parpadeo)
+        flat varying vec3 vDim;
+        flat varying vec4 vInfo, vInfo2;
+        flat varying mat3 vRot;
 
         const vec3 K2700 = vec3(1.0, 0.70, 0.43);
         const vec3 K3200 = vec3(1.0, 0.80, 0.60);
@@ -335,6 +341,31 @@ export function createCity({ U, C, scene, extras = {} }) {
           float luces = smoothstep(0.86 + rug * 0.1, 0.97, vnoise(p)) * (1.0 - rug);
           abajo += K3200 * luces * 0.35;
           return mix(sky, abajo, smoothstep(0.02, -0.06, el));
+        }
+
+        // Detalle del interior según el tamaño del vano en pantalla (lo fija main): por debajo
+        // de ~8 px se usa su brillo medio, así las luminarias no titilan al mover la cámara.
+        float gDetalleInterior = 1.0;
+        // paso con antialias: transición del ancho de un píxel (w en unidades de celda)
+        float pasoAA(float e, float x, float w) {
+          return smoothstep(e - w, e + w, x);
+        }
+        float caja(vec2 f, vec2 a, vec2 b, vec2 w) {
+          return pasoAA(a.x, f.x, w.x) * (1.0 - pasoAA(b.x, f.x, w.x)) * pasoAA(a.y, f.y, w.y) * (1.0 - pasoAA(b.y, f.y, w.y));
+        }
+
+        // Encendido de un piso visto sin resolver sus ventanas, en la coordenada de celda c:
+        // inquilino del bloque de pisos × grupo de oficinas a lo largo del piso.
+        // kg: 1 = grupos resueltos; 0 = grupos de menos de ~2 px, se usa su valor medio (0,7)
+        float pisoPatron(vec2 c, float seed, float litR, float style, float face, float kg) {
+          vec2 idc = floor(c);
+          if (style == 2.0) return litR * 0.85; // viviendas: ocupación media
+          if (style == 4.0) return 0.06;
+          float bl = floor(idc.y / (1.0 + floor(fract(seed * 3.7) * 3.0)));
+          float on = step(hash12(vec2(bl, seed)), litR);
+          if ((style == 3.0 || style == 5.0) && idc.y < 1.0) on = 1.0;
+          float gr = step(0.3, hash12(vec2(floor(c.x / (4.0 + 6.0 * fract(seed * 1.9))), idc.y * 1.31 + seed + face)));
+          return on * mix(0.7, gr, kg);
         }
 
         // Interior de un vano visto a través del vidrio (interior mapping).
@@ -360,7 +391,7 @@ export function createCity({ U, C, scene, extras = {} }) {
           } else {
             c = lc * 0.14 * (0.5 + 0.5 * q.y / fh);
           }
-          return mix(amb, c, lit);
+          return mix(amb, mix(lc * 0.2, c, gDetalleInterior), lit);
         }
 
         void main() {
@@ -371,7 +402,9 @@ export function createCity({ U, C, scene, extras = {} }) {
           float H = vInfo2.z;
           vec3 n = vN;
           vec3 V = normalize(cameraPosition - vWorld);
-          bool techo = uForma > 1.5 ? n.y > 0.95 : abs(n.y) > 0.5;
+          // en la cuña, la cara inclinada es fachada; la base (hacia abajo) cuenta como techo:
+          // si cayera en la rama de caras en z tendría normal nula (NaN en la pasada espejo)
+          bool techo = uForma > 1.5 ? (n.y > 0.95 || n.y < -0.5) : abs(n.y) > 0.5;
 
           // sistema local de la cara: T (a lo largo), Y (arriba), N (fuera)
           vec3 nl;
@@ -387,11 +420,11 @@ export function createCity({ U, C, scene, extras = {} }) {
             faceW = 3.14159 * max(vDim.x, vDim.z);
             face = 0.0;
           } else if (abs(n.x) > 0.5) {
-            nl = vec3(sign(n.x), 0.0, 0.0);
+            nl = vec3(n.x >= 0.0 ? 1.0 : -1.0, 0.0, 0.0);
             tl = vec3(0.0, 0.0, 1.0); // a lo largo de u = z local
             u = vLp.z; faceW = vDim.z; face = n.x > 0.0 ? 1.0 : 2.0;
           } else {
-            nl = vec3(0.0, 0.0, sign(n.z));
+            nl = vec3(0.0, 0.0, n.z >= 0.0 ? 1.0 : -1.0);
             tl = vec3(1.0, 0.0, 0.0); // a lo largo de u = x local
             u = vLp.x; faceW = vDim.x; face = n.z > 0.0 ? 3.0 : 4.0;
           }
@@ -415,9 +448,12 @@ export function createCity({ U, C, scene, extras = {} }) {
             vec2 f = fract(cf);
             vec2 dc = fwidth(cf);
             float pxCelda = 1.0 / max(max(dc.x, dc.y), 1e-4);
-            float nitido = smoothstep(1.5, 3.5, pxCelda);
+            // umbrales altos: una ventana de 1–4 px se re-muestrea al moverse la cámara y titila
+            float nitido = smoothstep(3.0, 6.0, pxCelda);
             float pxPiso = 1.0 / max(dc.y, 1e-4);
-            float pisoNitido = smoothstep(0.8, 2.0, pxPiso);
+            float pisoNitido = smoothstep(1.2, 3.0, pxPiso);
+            gDetalleInterior = smoothstep(8.0, 20.0, pxCelda);
+            vec2 wa = max(dc, vec2(1e-4)) * 0.7;
 
             // iluminación organizada: bloques de pisos por inquilino, algunos vanos apagados
             float bloque = floor(id.y / (1.0 + floor(fract(seed * 3.7) * 3.0)));
@@ -459,8 +495,8 @@ export function createCity({ U, C, scene, extras = {} }) {
             if (style == 0.0 || style == 6.0) {
               // muro cortina: montantes, antepecho por piso, vidrio con interior
               float mw = 0.06 / ww;
-              float montante = 1.0 - step(mw, f.x) * step(f.x, 1.0 - mw);
-              float antepecho = step(f.y, 0.24);
+              float montante = 1.0 - pasoAA(mw, f.x, wa.x) * (1.0 - pasoAA(1.0 - mw, f.x, wa.x));
+              float antepecho = 1.0 - pasoAA(0.24, f.y, wa.y);
               float aleta = style == 6.0 ? smoothstep(0.1, 0.0, abs(f.x - 0.5) - 0.38) : 0.0;
               vec3 vidrio = interior(f, rd, ww, fh, D, lit * (1.0 - ciega), lc, hash12(id + seed)) * (1.0 - Fg) * 0.9 + env * Fg;
               vec3 panel = env * (0.25 + 0.75 * Fg) + vec3(0.004);
@@ -471,8 +507,8 @@ export function createCity({ U, C, scene, extras = {} }) {
               aVano = 0.7 * (1.0 - ciega) * (1.0 - Fg) * 0.9;
             } else if (style == 2.0) {
               // residencial: losas de balcón, carpinterías, ventanas cálidas
-              float losa = step(f.y, 0.1);
-              float vano = step(0.18, f.x) * step(f.x, 0.82) * step(0.2, f.y) * step(f.y, 0.88);
+              float losa = 1.0 - pasoAA(0.1, f.y, wa.y);
+              float vano = caja(f, vec2(0.18, 0.2), vec2(0.82, 0.88), wa);
               vec3 muro = vec3(0.045, 0.042, 0.04) * (uHaze * 4.0 + K2700 * 0.05 * smoothstep(30.0, 0.0, v));
               vec3 ventana = interior(f, rd, ww, fh, D, lit, lc * 0.85, hash12(id + seed)) * (1.0 - Fg) + env * Fg;
               detalle = mix(muro, ventana, vano);
@@ -481,7 +517,7 @@ export function createCity({ U, C, scene, extras = {} }) {
               aVano = 0.43 * 0.85 * (1.0 - Fg);
             } else if (style == 5.0) {
               // patrimonio: piedra bañada en luz cálida desde abajo, vanos más oscuros
-              float vano = step(0.28, f.x) * step(f.x, 0.72) * step(0.14, f.y) * step(f.y, 0.78);
+              float vano = caja(f, vec2(0.28, 0.14), vec2(0.72, 0.78), wa);
               vec3 piedra = vec3(0.55, 0.47, 0.36) * K2700 * (0.2 + 0.3 * smoothstep(H, 0.0, v));
               vec3 ventana = interior(f, rd, ww, fh, D, lit, lc, hash12(id + seed)) * 0.8;
               detalle = mix(piedra, ventana, vano);
@@ -491,7 +527,7 @@ export function createCity({ U, C, scene, extras = {} }) {
               // piedra/hormigón con ventanas punzonadas, podios comerciales y servicio
               float fx = style == 3.0 ? 0.06 : 0.17;
               float fy = style == 3.0 ? 0.12 : 0.25;
-              float vano = step(fx, f.x) * step(f.x, 1.0 - fx) * step(fy, f.y) * step(f.y, 0.92);
+              float vano = caja(f, vec2(fx, fy), vec2(1.0 - fx, 0.92), wa);
               vec3 muro = vec3(0.05, 0.048, 0.046) * (uHaze * 3.5 + K2700 * 0.06 * smoothstep(25.0, 0.0, v));
               vec3 ventana = interior(f, rd, ww, fh, D, lit * (1.0 - ciega), lc, hash12(id + seed)) * (1.0 - Fg) + env * Fg;
               detalle = mix(muro, ventana, vano);
@@ -500,7 +536,18 @@ export function createCity({ U, C, scene, extras = {} }) {
               aVano = fv * (1.0 - ciega) * (1.0 - Fg);
             }
             // piso sin resolver ventanas: grupos encendidos de ese piso (≈70 % de sus vanos)
-            vec3 porPiso = apagado + interiorMedio * aVano * pisoOn * grupo * 0.7;
+            // (las viviendas se sortean por unidad: sin resolverlas se usa su ocupación media)
+            // Filtrado dentro del píxel: el patrón es escalonado (piso encendido o no), así que
+            // se promedian 4 submuestras en rejilla rotada sobre la huella del píxel. Sin esto
+            // los píxeles de borde cambian de piso con cualquier movimiento y la ciudad titila.
+            vec2 ex = dFdx(cf);
+            vec2 ey = dFdy(cf);
+            float kg = smoothstep(1.5, 3.5, (4.0 + 6.0 * fract(seed * 1.9)) / max(dc.x, 1e-4));
+            float pisoLejos = 0.25 * (pisoPatron(cf + ex * 0.125 + ey * 0.375, seed, litR, style, face, kg)
+                                    + pisoPatron(cf - ex * 0.375 + ey * 0.125, seed, litR, style, face, kg)
+                                    + pisoPatron(cf - ex * 0.125 - ey * 0.375, seed, litR, style, face, kg)
+                                    + pisoPatron(cf + ex * 0.375 - ey * 0.125, seed, litR, style, face, kg));
+            vec3 porPiso = apagado + interiorMedio * aVano * pisoLejos * 0.7;
             // ni pisos resueltos: ocupación media del edificio, temperatura promedio
             vec3 sinPisos = apagado + K3200 * 0.2 * aVano * litR * 0.49;
             vec3 lejos = mix(sinPisos, porPiso, pisoNitido);
@@ -520,7 +567,8 @@ export function createCity({ U, C, scene, extras = {} }) {
               }
             }
             // luz cálida de calle sobre la base de las fachadas
-            col += K2700 * 0.03 * exp(-v / 14.0);
+            // max(): en la cámara espejo un varying extrapolado puede llegar muy negativo (∞)
+            col += K2700 * 0.03 * exp(-max(v, 0.0) / 14.0);
           }
           gl_FragColor = vec4(atmos(col, vWorld), 1.0);
         }

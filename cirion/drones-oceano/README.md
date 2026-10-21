@@ -92,6 +92,17 @@ uniforme de longitud de arco (0,2 m) y con marcos por transporte paralelo precal
   la picada), traslación ≤ 3 m/cuadro, siempre continua.
 - Revisión cuadro a cuadro del tramo 4,3–9,4 s: diferencia media entre cuadros sin picos
   salvo el cambio de medio en el cruce (8,80–8,87 s), que es gradual.
+- Estabilidad de la ciudad (sin parpadeo): los datos por edificio llegan al shader como
+  `flat` (interpolados, un estilo 5.0 llegaba como 4,9999995 en algunos píxeles y la fachada
+  cambiaba de tipología píxel a píxel); el encendido por piso se filtra con 4 submuestras
+  dentro de cada píxel y las ventanas sueltas solo se dibujan cuando miden ≥ 3–6 px. Con
+  la cámara movida 0,1 mm, 0 píxeles del skyline cambian; entre cuadros reales, los
+  cambios grandes (> 40 niveles) bajaron de ~4500 a ~150 px (grano y movimiento real).
+- Sin valores no finitos: una cara de cuña sin clasificar y una exponencial con un
+  _varying_ extrapolado en la cámara espejo producían NaN/∞ que el bloom extendía como un
+  rectángulo negro (un cuadro aislado en 2,23 s). Corregidos en origen; además el agua y
+  el posproceso descartan cualquier muestra no finita. Verificado en los 266 cuadros con la
+  cámara sobre el agua (`window.__cirion.depurar` expone el render y el reflejo).
 
 ## Estructura
 
